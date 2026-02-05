@@ -1,10 +1,26 @@
 
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Users, Clock, AlertTriangle, UserMinus, Search, Filter, Download, UserCheck, MoreVertical } from 'lucide-react';
+import { 
+  Users, 
+  Clock, 
+  AlertTriangle, 
+  UserMinus, 
+  Search, 
+  Download, 
+  UserCheck, 
+  MoreVertical, 
+  X, 
+  Calendar as CalendarIcon, 
+  Mail, 
+  Shield, 
+  Upload,
+  UserPlus,
+  Briefcase
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { User, AttendanceRecord, Stats } from '../types';
-import { mockUsers, mockAttendance } from '../mockData';
+import { User, Stats, UserRole } from '../types';
+import { mockUsers } from '../mockData';
 
 const chartData = [
   { name: 'Mon', present: 85 },
@@ -21,19 +37,77 @@ interface AdminDashboardProps {
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [employees, setEmployees] = useState<User[]>(mockUsers);
   
+  // Form State
+  const [formData, setFormData] = useState({
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    dob: '',
+    gender: 'Male',
+    bloodGroup: '',
+    birthPlace: '',
+    nationality: '',
+    motherTongue: '',
+    email: '',
+    aadharNo: '',
+    department: 'Engineering'
+  });
+
   const stats: Stats = {
-    totalEmployees: mockUsers.length - 1,
-    presentToday: 88,
+    totalEmployees: employees.length - 1,
+    presentToday: Math.floor(employees.length * 0.85),
     lateToday: 4,
     onLeave: 8
   };
 
-  const filteredEmployees = mockUsers.filter(u => 
-    u.id !== '1' && // Hide self
+  const filteredEmployees = employees.filter(u => 
+    u.id !== '1' && // Hide self (Admin)
     (u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
      u.department.toLowerCase().includes(searchTerm.toLowerCase()))
-  ).slice(0, 10); // Only show top 10 for demo
+  ).slice(0, 15);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.dob) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const newEmployee: User = {
+      id: (employees.length + 1).toString(),
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      role: UserRole.EMPLOYEE,
+      avatar: `https://i.pravatar.cc/150?u=${formData.email}`,
+      department: formData.department
+    };
+
+    setEmployees(prev => [newEmployee, ...prev]);
+    setShowAddModal(false);
+    
+    // Reset form
+    setFormData({
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      dob: '',
+      gender: 'Male',
+      bloodGroup: '',
+      birthPlace: '',
+      nationality: '',
+      motherTongue: '',
+      email: '',
+      aadharNo: '',
+      department: 'Engineering'
+    });
+  };
 
   return (
     <div className="pt-16 min-h-screen bg-slate-50">
@@ -49,8 +123,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               <Download className="w-4 h-4" /> Export
             </button>
-            <button className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-xl text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-md">
-              <Users className="w-4 h-4" /> Add Employee
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-indigo-600 px-4 py-2 rounded-xl text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+            >
+              <UserPlus className="w-4 h-4" /> Add Employee
             </button>
           </div>
         </header>
@@ -140,7 +217,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             </div>
           </div>
 
-          {/* Right Column: Charts & Side Info */}
+          {/* Right Column */}
           <div className="space-y-8">
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
               <h3 className="font-bold text-slate-800 mb-6">Attendance Trend (This Week)</h3>
@@ -159,7 +236,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="mt-4 text-xs text-slate-500 text-center">Numbers represent % of staff present each day.</p>
             </div>
 
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
@@ -183,6 +259,167 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
           </div>
         </div>
       </main>
+
+      {/* Add Employee Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-5xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col my-auto animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                  <UserPlus className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 leading-none">Employee</h2>
+                  <p className="text-xs font-medium text-slate-400 mt-1 uppercase tracking-widest">Administrator Portal</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="p-2 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 p-8 overflow-y-auto max-h-[80vh]">
+              <div className="mb-6 border-b border-slate-100 pb-2">
+                <h3 className="text-indigo-600 font-bold inline-block px-1 text-sm uppercase tracking-wide border-b-2 border-indigo-600">
+                  Personal Details
+                </h3>
+              </div>
+
+              {/* Single Form Area - Only Personal Details */}
+              <div className="max-w-4xl pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8">
+                  {/* First Name */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">First Name <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="First Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Middle Name */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Middle Name</label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange} placeholder="Middle Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Last Name */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Last Name <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Last Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Date of Birth */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Date of Birth <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2 relative max-w-[240px]">
+                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                  </div>
+
+                  {/* Gender */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-1">Gender <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2 flex items-center gap-6">
+                    {['Male', 'Female', 'Other'].map((g) => (
+                      <label key={g} className="flex items-center gap-2 cursor-pointer group">
+                        <input type="radio" name="gender" value={g} checked={formData.gender === g} onChange={handleInputChange} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300" />
+                        <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{g}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Department */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Department <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2">
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <select name="department" value={formData.department} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-700 font-medium">
+                        <option value="Engineering">Engineering</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Human Resources">Human Resources</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Blood Group */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Blood Group</label>
+                  <div className="md:col-span-2">
+                    <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-700 font-medium">
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+                    </select>
+                  </div>
+
+                  {/* Birth Place */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Birth Place</label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="birthPlace" value={formData.birthPlace} onChange={handleInputChange} placeholder="Birth Place" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Nationality */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Nationality</label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} placeholder="Nationality" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Mother Tongue */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Mother Tongue</label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="motherTongue" value={formData.motherTongue} onChange={handleInputChange} placeholder="Mother Tongue" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Email */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Email <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2 relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Social Security */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Social Security / Aadhar No.</label>
+                  <div className="md:col-span-2">
+                    <input type="text" name="aadharNo" value={formData.aadharNo} onChange={handleInputChange} placeholder="Social Security / Aadhar No." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Upload Card */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Upload Social Security / Aadhar Card</label>
+                  <div className="md:col-span-2">
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm transition-all">
+                        <Upload className="w-3.5 h-3.5" />
+                        Browse...
+                        <input type="file" className="hidden" />
+                      </label>
+                      <span className="text-xs text-slate-400 italic">No file selected.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-8 py-6 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSave}
+                className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+              >
+                Save Employee
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
