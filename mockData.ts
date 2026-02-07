@@ -6,6 +6,7 @@ export const mockUsers: User[] = [
     id: '1',
     name: 'Admin User',
     email: 'admin@attendx.com',
+    phone: '+1234567890',
     role: UserRole.ADMIN,
     avatar: 'https://i.pravatar.cc/150?u=admin',
     department: 'Human Resources'
@@ -14,6 +15,7 @@ export const mockUsers: User[] = [
     id: '2',
     name: 'John Doe',
     email: 'john@attendx.com',
+    phone: '+1987654321',
     role: UserRole.EMPLOYEE,
     avatar: 'https://i.pravatar.cc/150?u=john',
     department: 'Engineering'
@@ -22,6 +24,7 @@ export const mockUsers: User[] = [
     id: '3',
     name: 'Jane Smith',
     email: 'jane@attendx.com',
+    phone: '+1122334455',
     role: UserRole.EMPLOYEE,
     avatar: 'https://i.pravatar.cc/150?u=jane',
     department: 'Marketing'
@@ -31,6 +34,7 @@ export const mockUsers: User[] = [
     id: (i + 4).toString(),
     name: `Employee ${i + 4}`,
     email: `employee${i + 4}@attendx.com`,
+    phone: `+1555000${(i + 4).toString().padStart(4, '0')}`,
     role: UserRole.EMPLOYEE,
     avatar: `https://i.pravatar.cc/150?u=emp${i + 4}`,
     department: ['Engineering', 'Marketing', 'Sales', 'Finance', 'Operations'][i % 5]

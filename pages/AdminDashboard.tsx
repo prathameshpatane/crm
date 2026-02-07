@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { 
   Users, 
@@ -16,7 +17,9 @@ import {
   Shield, 
   Upload,
   UserPlus,
-  Briefcase
+  Briefcase,
+  MessageCircle,
+  Phone
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { User, Stats, UserRole } from '../types';
@@ -36,6 +39,7 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [employees, setEmployees] = useState<User[]>(mockUsers);
@@ -52,6 +56,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     nationality: '',
     motherTongue: '',
     email: '',
+    phone: '',
     aadharNo: '',
     department: 'Engineering'
   });
@@ -84,6 +89,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
       id: (employees.length + 1).toString(),
       name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
+      phone: formData.phone,
       role: UserRole.EMPLOYEE,
       avatar: `https://i.pravatar.cc/150?u=${formData.email}`,
       department: formData.department
@@ -104,9 +110,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
       nationality: '',
       motherTongue: '',
       email: '',
+      phone: '',
       aadharNo: '',
       department: 'Engineering'
     });
+  };
+
+  const openWhatsApp = () => {
+    navigate('/admin/whatsapp-setup');
+  };
+
+  const handleBroadcast = () => {
+    navigate('/admin/whatsapp-setup');
   };
 
   return (
@@ -119,7 +134,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             <h1 className="text-2xl font-bold text-slate-900">Workforce Overview</h1>
             <p className="text-slate-500">Real-time status of all {stats.totalEmployees} employees.</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <button 
+              onClick={handleBroadcast}
+              className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-xl text-sm font-bold text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4" /> Broadcast (WA Rocket)
+            </button>
             <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               <Download className="w-4 h-4" /> Export
             </button>
@@ -176,7 +197,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Department</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Today Status</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Check-in</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Actions</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase text-center">WA Rocket</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -202,9 +223,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                           {idx % 5 === 0 ? '09:15 AM' : '08:45 AM'}
                         </td>
                         <td className="px-6 py-4">
-                          <button className="text-slate-400 hover:text-slate-600">
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={openWhatsApp}
+                              title="Go to WA Rocket Extension Info"
+                              className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all active:scale-90"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </button>
+                            <button className="p-2 text-slate-400 hover:text-slate-600">
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -346,38 +376,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                     </div>
                   </div>
 
-                  {/* Blood Group */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Blood Group</label>
-                  <div className="md:col-span-2">
-                    <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-700 font-medium">
-                      <option value="">Select Blood Group</option>
-                      <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
-                    </select>
-                  </div>
-
-                  {/* Birth Place */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Birth Place</label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="birthPlace" value={formData.birthPlace} onChange={handleInputChange} placeholder="Birth Place" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
-
-                  {/* Nationality */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Nationality</label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} placeholder="Nationality" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
-
-                  {/* Mother Tongue */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Mother Tongue</label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="motherTongue" value={formData.motherTongue} onChange={handleInputChange} placeholder="Mother Tongue" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
-
                   {/* Email */}
                   <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Email <span className="text-red-500">*</span></label>
                   <div className="md:col-span-2 relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                  </div>
+
+                  {/* Phone */}
+                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">WhatsApp Phone No. <span className="text-red-500">*</span></label>
+                  <div className="md:col-span-2 relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+1234567890" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
                   </div>
 
                   {/* Social Security */}

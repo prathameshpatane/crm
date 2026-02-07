@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import WhatsAppInfoPage from './pages/WhatsAppInfoPage';
 import { User, UserRole } from './types';
 
 const App: React.FC = () => {
@@ -53,6 +54,14 @@ const App: React.FC = () => {
             path="/admin" 
             element={user && user.role === UserRole.ADMIN ? (
               <AdminDashboard user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" />
+            )} 
+          />
+          <Route 
+            path="/admin/whatsapp-setup" 
+            element={user && user.role === UserRole.ADMIN ? (
+              <WhatsAppInfoPage user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )} 
