@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ClientDashboard from './pages/ClientDashboard';
 import WhatsAppInfoPage from './pages/WhatsAppInfoPage';
 import { User, UserRole } from './types';
 
@@ -59,12 +60,12 @@ const App: React.FC = () => {
             )} 
           />
           <Route 
-            path="/admin/whatsapp-setup" 
-            element={user && user.role === UserRole.ADMIN ? (
-              <WhatsAppInfoPage user={user} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/login" />
-            )} 
+            path="/client-portal" 
+            element={<ClientDashboard onLogout={handleLogout} />} 
+          />
+          <Route 
+            path="/whatsapp-automation" 
+            element={<WhatsAppInfoPage onLogout={handleLogout} />} 
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -12,14 +12,12 @@ import {
   MousePointer2
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { User } from '../types';
 
 interface WhatsAppInfoPageProps {
-  user: User;
   onLogout: () => void;
 }
 
-const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ user, onLogout }) => {
+const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
   const WA_ROCKET_URL = 'https://chromewebstore.google.com/detail/warocket/jcfgjifalfldkffiklbhkkddhcpfehio';
 
@@ -57,15 +55,15 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ user, onLogout }) =
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
-      <Navbar variant="app" userName={user.name} onLogout={onLogout} />
+      <Navbar variant="landing" />
       
       <main className="max-w-4xl mx-auto px-4 py-12">
         <button 
-          onClick={() => navigate('/admin')}
+          onClick={() => navigate('/')}
           className="group flex items-center gap-2 text-slate-500 font-bold hover:text-indigo-600 transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
+          Back to Home
         </button>
 
         <div className="bg-white rounded-[40px] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
@@ -112,15 +110,6 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ user, onLogout }) =
           </div>
 
           <div className="p-12 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
-                <Download className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-800">Ready to broadcast?</h4>
-                <p className="text-sm text-slate-500 font-medium">Once installed, you can reach all your employees instantly.</p>
-              </div>
-            </div>
             <button 
               onClick={() => window.open(WA_ROCKET_URL, '_blank')}
               className="w-full md:w-auto px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all active:scale-95"

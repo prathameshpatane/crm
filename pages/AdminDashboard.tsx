@@ -18,8 +18,12 @@ import {
   Upload,
   UserPlus,
   Briefcase,
-  MessageCircle,
-  Phone
+  Phone,
+  Droplets,
+  Globe,
+  Languages,
+  MapPin,
+  Fingerprint
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { User, Stats, UserRole } from '../types';
@@ -116,14 +120,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     });
   };
 
-  const openWhatsApp = () => {
-    navigate('/admin/whatsapp-setup');
-  };
-
-  const handleBroadcast = () => {
-    navigate('/admin/whatsapp-setup');
-  };
-
   return (
     <div className="pt-16 min-h-screen bg-slate-50">
       <Navbar variant="app" userName={user.name} onLogout={onLogout} />
@@ -135,12 +131,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             <p className="text-slate-500">Real-time status of all {stats.totalEmployees} employees.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button 
-              onClick={handleBroadcast}
-              className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-4 py-2 rounded-xl text-sm font-bold text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4" /> Broadcast (WA Rocket)
-            </button>
             <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               <Download className="w-4 h-4" /> Export
             </button>
@@ -172,7 +162,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main List Area */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -197,7 +186,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Department</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Today Status</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Check-in</th>
-                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase text-center">WA Rocket</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
@@ -223,15 +212,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                           {idx % 5 === 0 ? '09:15 AM' : '08:45 AM'}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={openWhatsApp}
-                              title="Go to WA Rocket Extension Info"
-                              className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all active:scale-90"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 text-slate-400 hover:text-slate-600">
+                          <div className="flex items-center justify-center">
+                            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </div>
@@ -241,13 +223,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                   </tbody>
                 </table>
               </div>
-              <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                Showing {filteredEmployees.length} of {stats.totalEmployees} Employees
-              </div>
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="space-y-8">
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
               <h3 className="font-bold text-slate-800 mb-6">Attendance Trend (This Week)</h3>
@@ -267,30 +245,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                 </ResponsiveContainer>
               </div>
             </div>
-
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="font-bold text-slate-800 mb-4">Pending Requests</h3>
-              <div className="space-y-4">
-                {[1, 2].map((_, i) => (
-                  <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-bold text-slate-800 text-sm">Sick Leave Request</div>
-                      <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">New</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-4">Employee {i + 5} requested 2 days leave starting tomorrow.</p>
-                    <div className="flex gap-2">
-                      <button className="flex-1 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors">Approve</button>
-                      <button className="flex-1 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors">Decline</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </main>
 
-      {/* Add Employee Modal */}
+      {/* Add Employee Modal - Fully Restored Details */}
       {showAddModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-5xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col my-auto animate-in fade-in zoom-in duration-200">
@@ -301,7 +260,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                   <UserPlus className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 leading-none">Employee</h2>
+                  <h2 className="text-xl font-bold text-slate-900 leading-none">Add Employee</h2>
                   <p className="text-xs font-medium text-slate-400 mt-1 uppercase tracking-widest">Administrator Portal</p>
                 </div>
               </div>
@@ -314,101 +273,157 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 p-8 overflow-y-auto max-h-[80vh]">
-              <div className="mb-6 border-b border-slate-100 pb-2">
-                <h3 className="text-indigo-600 font-bold inline-block px-1 text-sm uppercase tracking-wide border-b-2 border-indigo-600">
-                  Personal Details
-                </h3>
-              </div>
-
-              {/* Single Form Area - Only Personal Details */}
-              <div className="max-w-4xl pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8">
-                  {/* First Name */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">First Name <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="First Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+            <div className="flex-1 p-8 overflow-y-auto max-h-[75vh]">
+              <div className="space-y-12">
+                {/* Personal Information Section */}
+                <section>
+                  <div className="mb-6 border-b border-slate-100 pb-2">
+                    <h3 className="text-indigo-600 font-bold inline-block px-1 text-sm uppercase tracking-wide border-b-2 border-indigo-600">
+                      Personal Details
+                    </h3>
                   </div>
 
-                  {/* Middle Name */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Middle Name</label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange} placeholder="Middle Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">First Name <span className="text-red-500">*</span></label>
+                      <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="Enter First Name" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Middle Name</label>
+                      <input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange} placeholder="Enter Middle Name" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Last Name <span className="text-red-500">*</span></label>
+                      <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Enter Last Name" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
 
-                  {/* Last Name */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Last Name <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Last Name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Date of Birth <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
+                    </div>
 
-                  {/* Date of Birth */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Date of Birth <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2 relative max-w-[240px]">
-                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Gender <span className="text-red-500">*</span></label>
+                      <div className="flex items-center gap-4 py-2.5">
+                        {['Male', 'Female', 'Other'].map((g) => (
+                          <label key={g} className="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="gender" value={g} checked={formData.gender === g} onChange={handleInputChange} className="w-4 h-4 text-indigo-600" />
+                            <span className="text-sm font-medium text-slate-600">{g}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
 
-                  {/* Gender */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-1">Gender <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2 flex items-center gap-6">
-                    {['Male', 'Female', 'Other'].map((g) => (
-                      <label key={g} className="flex items-center gap-2 cursor-pointer group">
-                        <input type="radio" name="gender" value={g} checked={formData.gender === g} onChange={handleInputChange} className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300" />
-                        <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{g}</span>
-                      </label>
-                    ))}
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Blood Group</label>
+                      <div className="relative">
+                        <Droplets className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <select name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                          <option value="">Select Group</option>
+                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                        </select>
+                      </div>
+                    </div>
 
-                  {/* Department */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Department <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2">
-                    <div className="relative">
-                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <select name="department" value={formData.department} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-700 font-medium">
-                        <option value="Engineering">Engineering</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Operations">Operations</option>
-                        <option value="Human Resources">Human Resources</option>
-                      </select>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Birth Place</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="text" name="birthPlace" value={formData.birthPlace} onChange={handleInputChange} placeholder="Birth Place" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Nationality</label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} placeholder="Nationality" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Mother Tongue</label>
+                      <div className="relative">
+                        <Languages className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="text" name="motherTongue" value={formData.motherTongue} onChange={handleInputChange} placeholder="Mother Tongue" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
                     </div>
                   </div>
+                </section>
 
-                  {/* Email */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Email <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2 relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
+                {/* Professional & Contact Information Section */}
+                <section>
+                  <div className="mb-6 border-b border-slate-100 pb-2">
+                    <h3 className="text-indigo-600 font-bold inline-block px-1 text-sm uppercase tracking-wide border-b-2 border-indigo-600">
+                      Work & Contact Info
+                    </h3>
                   </div>
 
-                  {/* Phone */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">WhatsApp Phone No. <span className="text-red-500">*</span></label>
-                  <div className="md:col-span-2 relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+1234567890" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Department <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <select name="department" value={formData.department} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                          <option value="Engineering">Engineering</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Operations">Operations</option>
+                          <option value="Human Resources">Human Resources</option>
+                        </select>
+                      </div>
+                    </div>
 
-                  {/* Social Security */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Social Security / Aadhar No.</label>
-                  <div className="md:col-span-2">
-                    <input type="text" name="aadharNo" value={formData.aadharNo} onChange={handleInputChange} placeholder="Social Security / Aadhar No." className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-300" />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Work Email <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="email@attendx.com" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
+                    </div>
 
-                  {/* Upload Card */}
-                  <label className="md:col-span-1 text-sm font-bold text-slate-700 pt-3">Upload Social Security / Aadhar Card</label>
-                  <div className="md:col-span-2">
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer shadow-sm transition-all">
-                        <Upload className="w-3.5 h-3.5" />
-                        Browse...
-                        <input type="file" className="hidden" />
-                      </label>
-                      <span className="text-xs text-slate-400 italic">No file selected.</span>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">WhatsApp Phone No. <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+1 234 567 890" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600">Social Security / Aadhar No.</label>
+                      <div className="relative">
+                        <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="text" name="aadharNo" value={formData.aadharNo} onChange={handleInputChange} placeholder="Unique Identity Number" className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                      </div>
                     </div>
                   </div>
-                </div>
+                </section>
+
+                {/* Identity Documents Section */}
+                <section>
+                  <div className="mb-6 border-b border-slate-100 pb-2">
+                    <h3 className="text-indigo-600 font-bold inline-block px-1 text-sm uppercase tracking-wide border-b-2 border-indigo-600">
+                      Identity Documents
+                    </h3>
+                  </div>
+
+                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-center">
+                    <div className="w-12 h-12 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center mx-auto mb-4">
+                      <Upload className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-800 mb-1">Upload ID Card Document</p>
+                    <p className="text-xs text-slate-400 mb-4 font-medium">Drag & drop files here, or click to browse (Max 5MB)</p>
+                    <input type="file" className="hidden" id="file-upload" />
+                    <label htmlFor="file-upload" className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold cursor-pointer hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                      Select Files
+                    </label>
+                  </div>
+                </section>
               </div>
             </div>
 
@@ -424,7 +439,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
                 onClick={handleSave}
                 className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
               >
-                Save Employee
+                Save Employee Records
               </button>
             </div>
           </div>

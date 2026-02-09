@@ -11,7 +11,19 @@ import {
   Zap, 
   Globe, 
   Smartphone,
-  ChevronRight
+  ChevronRight,
+  MessageCircle,
+  Rocket,
+  Twitter,
+  Linkedin,
+  Github,
+  Instagram,
+  Mail,
+  Phone,
+  Layout,
+  Briefcase,
+  History,
+  CreditCard
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
@@ -49,15 +61,6 @@ const LandingPage: React.FC = () => {
                   Book a Demo <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
-              
-              <div className="mt-12 flex items-center justify-center lg:justify-start gap-4 text-sm font-semibold text-slate-400">
-                <div className="flex -space-x-2">
-                  {[1,2,3,4].map(i => (
-                    <img key={i} className="w-8 h-8 rounded-full border-2 border-white" src={`https://i.pravatar.cc/100?u=${i}`} alt="user" />
-                  ))}
-                </div>
-                <span>Joined by 10k+ HR Managers</span>
-              </div>
             </div>
 
             <div className="flex-1 relative w-full max-w-2xl lg:max-w-none">
@@ -67,37 +70,122 @@ const LandingPage: React.FC = () => {
                   alt="Dashboard View" 
                   className="rounded-3xl shadow-2xl border border-slate-200 grayscale-[0.2]"
                 />
-                {/* Decorative floating card 1 */}
-                <div className="absolute -top-10 -right-6 md:-right-12 bg-white p-4 md:p-6 rounded-2xl shadow-xl border border-slate-100 hidden sm:block animate-bounce [animation-duration:5s]">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-bold">98%</div>
-                    <div className="text-xs font-bold text-slate-800">On-time Rate<br/><span className="text-slate-400 font-normal">This Week</span></div>
-                  </div>
-                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[98%]"></div>
-                  </div>
-                </div>
-                {/* Decorative floating card 2 */}
-                <div className="absolute -bottom-10 -left-6 md:-left-12 bg-indigo-600 p-4 md:p-6 rounded-2xl shadow-xl text-white hidden sm:block animate-pulse [animation-duration:4s]">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-6 h-6" />
-                    <div className="text-xs font-bold uppercase tracking-widest">Live Check-ins<br/><span className="text-indigo-200 font-normal">Active Now: 24</span></div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Logo Cloud */}
-      <section className="py-12 border-y border-slate-100 bg-slate-50/50">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-8">Trusted by industry leaders</p>
-          <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale transition-all hover:grayscale-0 hover:opacity-100">
-            {['Techflow', 'LogiCorp', 'NovaHR', 'WaveSystems', 'PrimeStaff'].map((name) => (
-              <span key={name} className="text-xl md:text-2xl font-black text-slate-400 cursor-default">{name}</span>
-            ))}
+      {/* WhatsApp Integration Section */}
+      <section className="py-24 bg-slate-900 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 blur-[120px] rounded-full"></div>
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 order-2 lg:order-1">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm">
+                  <MessageCircle className="w-10 h-10 text-emerald-400 mb-4" />
+                  <h4 className="text-white font-bold mb-2">Instant Broadcast</h4>
+                  <p className="text-slate-400 text-sm">Send updates to your entire team via WhatsApp in one click.</p>
+                </div>
+                <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm translate-y-8">
+                  <Rocket className="w-10 h-10 text-sky-400 mb-4" />
+                  <h4 className="text-white font-bold mb-2">WARocket Power</h4>
+                  <p className="text-slate-400 text-sm">Leverage specialized automation for high-volume messaging.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">
+                <MessageCircle className="w-4 h-4" />
+                New Integration
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
+                WhatsApp Attendance Automation
+              </h2>
+              <p className="text-lg text-slate-400 mb-10 leading-relaxed font-medium">
+                Connect your workspace directly to WhatsApp using the **WARocket** extension. Send automated check-in reminders, broadcast company announcements, and manage your workforce where they already are.
+              </p>
+              <Link 
+                to="/whatsapp-automation" 
+                className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/40 group"
+              >
+                Learn How to Setup <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Client Dashboard Section */}
+      <section className="py-24 bg-slate-50 overflow-hidden relative border-y border-slate-200">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest mb-6">
+                <Layout className="w-4 h-4" />
+                Enterprise Portal
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">
+                Executive Client Dashboard
+              </h2>
+              <p className="text-lg text-slate-500 mb-10 leading-relaxed font-medium">
+                Our high-tier dashboard provides a birds-eye view for organization owners. Manage your corporate profile, track cross-departmental activity, and handle billing through a dedicated self-service portal.
+              </p>
+              
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                {[
+                  { icon: Briefcase, text: "Client Overview & Status" },
+                  { icon: CheckCircle, text: "Profile Management" },
+                  { icon: History, text: "Activity & Reports" },
+                  { icon: CreditCard, text: "Self-Service Payments" }
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-slate-700 font-bold bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <feature.icon className="w-5 h-5 text-indigo-600" />
+                    {feature.text}
+                  </li>
+                ))}
+              </ul>
+
+              <Link 
+                to="/client-portal" 
+                className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 group"
+              >
+                Access Client Portal <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="flex-1 w-full">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-indigo-600/5 blur-3xl rounded-[60px]"></div>
+                <div className="bg-white border border-slate-200 rounded-[32px] shadow-2xl overflow-hidden relative">
+                   {/* Mini Dashboard Preview */}
+                   <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                        <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Preview Mode</div>
+                   </div>
+                   <div className="p-8">
+                      <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-xl"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-slate-200 rounded-md w-1/2 mb-2"></div>
+                          <div className="h-3 bg-slate-100 rounded-md w-1/3"></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="h-32 bg-slate-50 rounded-2xl border border-slate-100"></div>
+                        <div className="h-32 bg-slate-50 rounded-2xl border border-slate-100"></div>
+                      </div>
+                      <div className="mt-4 h-40 bg-slate-50 rounded-2xl border border-slate-100"></div>
+                   </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -108,144 +196,147 @@ const LandingPage: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-4">Powerful Features</h2>
             <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Everything you need to manage your hybrid workforce</h3>
-            <p className="text-lg text-slate-600 leading-relaxed">
-              We built AttendX to solve the friction points between employees and HR teams. Focus on work, not on logging it.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="group p-10 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-8">
                 <Clock className="w-8 h-8" />
               </div>
               <h4 className="text-2xl font-bold text-slate-800 mb-4">Precision Tracking</h4>
-              <p className="text-slate-600 leading-relaxed">
-                Geofencing and biometric options ensure attendance data is accurate, secure, and verifiable every time.
-              </p>
+              <p className="text-slate-600 leading-relaxed">Geofencing and biometric options ensure attendance data is accurate every time.</p>
             </div>
             
             <div className="group p-10 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mb-8">
                 <BarChart3 className="w-8 h-8" />
               </div>
               <h4 className="text-2xl font-bold text-slate-800 mb-4">Instant Reporting</h4>
-              <p className="text-slate-600 leading-relaxed">
-                Generate payroll-ready reports in seconds. Filter by department, date, or individual performance metrics.
-              </p>
+              <p className="text-slate-600 leading-relaxed">Generate payroll-ready reports in seconds. Filter by department or performance.</p>
             </div>
 
             <div className="group p-10 bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-8">
                 <Smartphone className="w-8 h-8" />
               </div>
               <h4 className="text-2xl font-bold text-slate-800 mb-4">Mobile Ready</h4>
-              <p className="text-slate-600 leading-relaxed">
-                Employees can clock in on the go with our responsive interface, featuring native-like experience on any device.
-              </p>
+              <p className="text-slate-600 leading-relaxed">Employees can clock in on the go with our responsive interface on any device.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats / Numbers Section */}
-      <section className="py-32 bg-indigo-600 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white opacity-[0.05] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="container mx-auto px-4 md:px-8 max-w-7xl relative z-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
-            <div>
-              <div className="text-5xl font-black text-white mb-2">99.9%</div>
-              <div className="text-indigo-100 font-bold uppercase tracking-widest text-xs">System Uptime</div>
-            </div>
-            <div>
-              <div className="text-5xl font-black text-white mb-2">15m</div>
-              <div className="text-indigo-100 font-bold uppercase tracking-widest text-xs">Saved daily / staff</div>
-            </div>
-            <div>
-              <div className="text-5xl font-black text-white mb-2">30%</div>
-              <div className="text-indigo-100 font-bold uppercase tracking-widest text-xs">Less Late Arrivals</div>
-            </div>
-            <div>
-              <div className="text-5xl font-black text-white mb-2">12+</div>
-              <div className="text-indigo-100 font-bold uppercase tracking-widest text-xs">Active Integrations</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-32 bg-slate-900 overflow-hidden relative">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[1200px] h-[400px] bg-indigo-500/20 blur-[150px] rounded-full pointer-events-none"></div>
-        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center relative z-10">
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight">Ready to elevate your team's culture?</h2>
-          <p className="text-xl text-slate-400 mb-12 font-medium">
-            Join thousands of teams who have transformed their workforce management with AttendX. No credit card required.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link to="/login" className="w-full sm:w-auto bg-indigo-600 text-white px-10 py-5 rounded-2xl font-bold text-xl hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-900/50">
-              Start Your Free Trial
-            </Link>
-            <button className="w-full sm:w-auto text-white font-bold text-lg hover:underline underline-offset-8">
-              Contact Sales
-            </button>
-          </div>
-          <div className="mt-16 flex items-center justify-center gap-8 text-slate-500 font-bold text-xs uppercase tracking-widest">
-            <div className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> 14-day free trial</div>
-            <div className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> Unlimited users</div>
-            <div className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-500" /> No setup fees</div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="bg-slate-900 border-t border-white/5 pt-20 pb-12">
+      {/* CTA Section */}
+      <section className="py-24">
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
-            <div className="col-span-2 lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="bg-indigo-600 p-1.5 rounded-lg">
+          <div className="bg-indigo-600 rounded-[48px] p-8 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-indigo-200">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-sky-400/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+            
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-8 relative z-10 max-w-2xl mx-auto leading-tight">
+              Ready to transform your workforce management?
+            </h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
+              <Link to="/login" className="w-full sm:w-auto bg-white text-indigo-600 px-10 py-5 rounded-2xl font-black text-lg hover:shadow-2xl transition-all active:scale-95">
+                Get Started Free
+              </Link>
+              <button className="w-full sm:w-auto bg-indigo-500 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-indigo-400 transition-all border border-indigo-400">
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 pt-24 pb-12 overflow-hidden relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+            {/* Branding Column */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-white">AttendX</span>
+                <span className="text-2xl font-black tracking-tighter text-white">AttendX</span>
               </div>
-              <p className="text-slate-400 max-w-xs mb-8">
-                Building the future of attendance tracking and employee engagement for teams worldwide.
+              <p className="text-slate-400 font-medium leading-relaxed">
+                The UI-first workforce platform designed to empower teams with real-time clarity and effortless attendance tracking.
               </p>
-              <div className="flex gap-4">
-                {[1,2,3].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">
-                    <Globe className="w-5 h-5 text-slate-300" />
-                  </div>
+              <div className="flex items-center gap-4">
+                {[Twitter, Linkedin, Github, Instagram].map((Icon, i) => (
+                  <Link key={i} to="#" className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                    <Icon className="w-5 h-5" />
+                  </Link>
                 ))}
               </div>
             </div>
+
+            {/* Product Column */}
             <div>
-              <h5 className="text-white font-bold mb-6">Product</h5>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="#" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Integrations</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Changelog</Link></li>
+              <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Product</h4>
+              <ul className="space-y-4">
+                {['Features', 'Integrations', 'Pricing', 'WARocket Guide', 'API Documentation'].map((item, i) => (
+                  <li key={i}>
+                    <Link to={item === 'WARocket Guide' ? '/whatsapp-automation' : '#'} className="text-slate-400 font-medium hover:text-indigo-400 transition-colors">
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
+
+            {/* Company Column */}
             <div>
-              <h5 className="text-white font-bold mb-6">Company</h5>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="#" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Blog</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Careers</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Contact</Link></li>
+              <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Company</h4>
+              <ul className="space-y-4">
+                {['About Us', 'Careers', 'Success Stories', 'Privacy Policy', 'Terms of Service'].map((item, i) => (
+                  <li key={i}>
+                    <Link to="#" className="text-slate-400 font-medium hover:text-indigo-400 transition-colors">
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
+
+            {/* Contact Column */}
             <div>
-              <h5 className="text-white font-bold mb-6">Legal</h5>
-              <ul className="space-y-4 text-slate-400 text-sm">
-                <li><Link to="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link to="#" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+              <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Contact</h4>
+              <ul className="space-y-6">
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/5 rounded-xl flex flex-shrink-0 items-center justify-center text-indigo-400">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase mb-1">Email Us</div>
+                    <div className="text-slate-300 font-medium">hello@attendx.com</div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/5 rounded-xl flex flex-shrink-0 items-center justify-center text-emerald-400">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase mb-1">Call Support</div>
+                    <div className="text-slate-300 font-medium">+1 (555) 000-0000</div>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
-          <div className="pt-12 border-t border-white/5 text-center text-slate-500 text-sm font-medium">
-            &copy; 2024 AttendX. All rights reserved. Crafted for excellence.
+
+          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-slate-500 text-sm font-medium">
+              &copy; 2024 AttendX. Built with precision and care.
+            </div>
+            <div className="flex items-center gap-8">
+              <Link to="#" className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest">Privacy</Link>
+              <Link to="#" className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest">Cookies</Link>
+              <Link to="#" className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest">Security</Link>
+            </div>
           </div>
         </div>
       </footer>
