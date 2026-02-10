@@ -105,7 +105,7 @@ const LandingPage: React.FC = () => {
                 WhatsApp Attendance Automation
               </h2>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed font-medium">
-                Connect your workspace directly to WhatsApp using the **WARocket** extension. Send automated check-in reminders, broadcast company announcements, and manage your workforce where they already are.
+                Connect your workspace directly to WhatsApp using the WARocket extension. Send automated check-in reminders, broadcast company announcements, and manage your workforce where they already are.
               </p>
               <Link 
                 to="/whatsapp-automation" 

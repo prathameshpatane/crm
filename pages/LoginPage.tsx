@@ -1,136 +1,218 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import { mockUsers } from '../mockData';
-import { User, UserRole } from '../types';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from "../lib/firebase";
 
 interface LoginPageProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: any) => void;
 }
+
+const ADMIN_EMAIL = 'admin@attendx.com';
+const ADMIN_PASSWORD = 'Admin@123';
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulated login delay
-    setTimeout(() => {
-      const foundUser = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
-      if (foundUser) {
-        onLogin(foundUser);
-        if (foundUser.role === UserRole.ADMIN) {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        setError('Invalid credentials. Try admin@attendx.com or john@attendx.com');
+    try {
+      // Admin login check (hardcoded, no Firebase auth)
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        onLogin({
+          id: 'admin-001',
+          name: 'Admin User',
+          email: ADMIN_EMAIL,
+          phone: '+1234567890',
+          role: 'ADMIN',
+          avatar: 'https://i.pravatar.cc/150?u=admin',
+          department: 'Human Resources'
+        });
+        navigate('/admin');
+        return;
       }
+
+      if (isSignUp) {
+        // Sign up new employee
+        if (!firstName || !lastName) {
+          setError('Please enter your first and last name');
+          setLoading(false);
+          return;
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const fullName = `${firstName} ${lastName}`;
+        
+        onLogin({
+          id: userCredential.user.uid,
+          name: fullName,
+          email: email,
+          phone: '',
+          role: 'EMPLOYEE',
+          avatar: `https://i.pravatar.cc/150?u=${email}`,
+          department: 'Engineering'
+        });
+        navigate('/dashboard');
+      } else {
+        // Login existing employee
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        onLogin({
+          id: userCredential.user.uid,
+          name: email.split('@')[0], // Use email prefix as name (you can fetch from Firestore)
+          email: email,
+          phone: '',
+          role: 'EMPLOYEE',
+          avatar: `https://i.pravatar.cc/150?u=${email}`,
+          department: 'Engineering'
+        });
+        navigate('/dashboard');
+      }
+
+    } catch (err: any) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        setError('Account not found. Please sign up first.');
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Invalid password.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('Email already in use. Please login instead.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password is too weak. Use at least 6 characters.');
+      } else {
+        setError(err.message || 'Invalid credentials');
+      }
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Side: Visual/Branding */}
-      <div className="hidden md:flex md:w-1/2 bg-indigo-600 items-center justify-center p-12 text-white relative overflow-hidden">
-        <div className="max-w-md relative z-10">
-          <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm">
-            <Clock className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-4xl font-bold mb-6">Welcome back to the future of workforce management.</h2>
-          <p className="text-indigo-100 text-lg leading-relaxed">
-            Manage your time effectively and stay connected with your team through AttendX.
+      {/* LEFT */}
+      <div className="hidden md:flex md:w-1/2 bg-indigo-600 items-center justify-center p-12 text-white">
+        <div>
+          <Clock className="w-12 h-12 mb-6" />
+          <h2 className="text-4xl font-bold mb-4">
+            Welcome to AttendX
+          </h2>
+          <p className="text-indigo-100">
+            Workforce management made simple.
+          </p>
+          <p className="text-indigo-200 text-sm mt-6">
+            <strong>Demo Admin:</strong> admin@attendx.com / Admin@123
+          </p>
+          <p className="text-indigo-200 text-sm mt-2">
+            <strong>Or:</strong> Sign up with your own Gmail account
           </p>
         </div>
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-indigo-500 rounded-full opacity-30"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-white rounded-full opacity-10"></div>
       </div>
 
-      {/* Right Side: Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-16 bg-white">
+      {/* RIGHT */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-sm">
-          <div className="md:hidden flex items-center gap-2 mb-12">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-slate-800">AttendX</span>
-          </div>
-
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Sign In</h1>
-          <p className="text-slate-500 mb-8">Access your personalized dashboard.</p>
+          <h1 className="text-3xl font-bold mb-2">
+            {isSignUp ? 'Create Account' : 'Sign In'}
+          </h1>
+          <p className="text-slate-500 mb-8">
+            {isSignUp ? 'Join AttendX as an employee' : 'Access your dashboard'}
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isSignUp && (
+              <>
+                <div>
+                  <label className="text-sm font-semibold">First Name</label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold">Last Name</label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+              <label className="text-sm font-semibold">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
-                  placeholder="name@company.com"
+                  className="w-full pl-11 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+              <label className="text-sm font-semibold">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
-                  placeholder="••••••••"
+                  className="w-full pl-11 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
               </div>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">
+              <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
                 <AlertCircle className="w-4 h-4" />
                 {error}
               </div>
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold flex justify-center hover:bg-indigo-700 disabled:opacity-50"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  Login <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              {loading ? 'Processing…' : (isSignUp ? 'Create Account' : 'Login')}
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col gap-4 text-sm text-center">
-            <p className="text-slate-500">
-              Don't have an account? <Link to="#" className="text-indigo-600 font-bold hover:underline">Request Access</Link>
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-[10px] uppercase font-bold tracking-widest">
-              <div className="p-2 bg-slate-50 rounded border border-slate-100">admin@attendx.com</div>
-              <div className="p-2 bg-slate-50 rounded border border-slate-100">john@attendx.com</div>
-            </div>
-          </div>
+          <p className="mt-6 text-center text-sm">
+            {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError('');
+                setEmail('');
+                setPassword('');
+                setFirstName('');
+                setLastName('');
+              }}
+              className="text-indigo-600 font-bold hover:underline"
+            >
+              {isSignUp ? 'Sign in' : 'Sign up'}
+            </button>
+          </p>
         </div>
       </div>
     </div>

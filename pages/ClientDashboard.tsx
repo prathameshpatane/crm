@@ -1,6 +1,7 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../lib/firebase';
 import { 
   Briefcase, 
   Settings, 
@@ -39,51 +40,26 @@ const ClientDashboard: React.FC = () => {
   
   // --- STATE FOR MULTI-ORGANIZATION CRUD ---
   
-  const [organizations, setOrganizations] = useState<ClientProfile[]>([
-    {
-      id: 'ORG-1',
-      companyName: "Acme Global Corp",
-      taxId: "USA-998877-XX",
-      address: "123 Innovation Drive, Palo Alto, CA 94301",
-      email: "corp@acme.com",
-      phone: "+1 (555) 000-0000",
-      industry: "Technology"
-    },
-    {
-      id: 'ORG-2',
-      companyName: "Stark Industries",
-      taxId: "NY-112233-SI",
-      address: "10880 Malibu Point, CA 90265",
-      email: "billing@stark.com",
-      phone: "+1 (212) 555-0199",
-      industry: "Manufacturing"
-    }
-  ]);
+  const [organizations, setOrganizations] = useState<ClientProfile[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedOrgId, setSelectedOrgId] = useState<string>('ORG-1');
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
 
-  const [contacts, setContacts] = useState<ClientContact[]>([
-    { id: 'C1', orgId: 'ORG-1', name: 'Sarah Jenkins', role: 'Account Manager', email: 'sarah@acme.com', isPrimary: true },
-    { id: 'C2', orgId: 'ORG-1', name: 'Mark Wilson', role: 'IT Director', email: 'm.wilson@acme.com', isPrimary: false },
-    { id: 'C3', orgId: 'ORG-2', name: 'Pepper Potts', role: 'CEO', email: 'pepper@stark.com', isPrimary: true }
-  ]);
+  const [contacts, setContacts] = useState<ClientContact[]>([]);
 
   // --- LOGS, TICKETS, PAYMENTS (Multi-tenant CRUD) ---
   const [logs, setLogs] = useState<ActivityLog[]>([
     { id: 'L1', orgId: 'ORG-1', event: "Organization Created", date: "2023-01-15", category: "Settings" },
     { id: 'L2', orgId: 'ORG-2', event: "Workspace Initialized", date: "2023-02-01", category: "Settings" }
   ]);
-  const [tickets, setTickets] = useState<SupportTicket[]>([
-    { id: 'T-101', orgId: 'ORG-1', subject: "Initial Workspace Setup", priority: "Medium", status: "Closed", createdAt: "2023-01-16" },
-    { id: 'T-102', orgId: 'ORG-2', subject: "Reactor Power Issues", priority: "High", status: "Open", createdAt: "2023-11-20" }
-  ]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [payments, setPayments] = useState<PaymentMethod[]>([
     { id: 'P-1', orgId: 'ORG-1', type: "Visa", lastFour: "4242", expiry: "09/25", isDefault: true },
     { id: 'P-2', orgId: 'ORG-2', type: "Amex", lastFour: "8888", expiry: "12/26", isDefault: true }
   ]);
 
   const currentOrg = useMemo(() => 
-    organizations.find(o => o.id === selectedOrgId) || organizations[0], 
+    organizations.find(o => o.id === selectedOrgId) || organizations[0] || { companyName: '', taxId: '', address: '', email: '', phone: '', industry: '' }, 
   [organizations, selectedOrgId]);
 
   const currentContacts = useMemo(() => 
@@ -125,60 +101,151 @@ const ClientDashboard: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Load organizations from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('organizations').onSnapshot(
+      snapshot => {
+        const orgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClientProfile));
+        setOrganizations(orgs);
+        if (orgs.length > 0 && !selectedOrgId) setSelectedOrgId(orgs[0].id);
+        setLoading(false);
+      },
+      error => {
+        console.error('Error loading organizations:', error);
+        setLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  // Load contacts from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('contacts').onSnapshot(snapshot => {
+      const contactsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClientContact));
+      setContacts(contactsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load tickets from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('tickets').onSnapshot(snapshot => {
+      const ticketsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString() : new Date().toLocaleDateString()
+        } as SupportTicket;
+      });
+      setTickets(ticketsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
   // --- CRUD HANDLERS ---
 
   // 1. Organization CRUD
-  const handleAddOrg = () => {
+  const handleAddOrg = async () => {
     if (!orgForm.companyName) return;
-    const newOrg: ClientProfile = { ...orgForm, id: `ORG-${Date.now()}` };
-    setOrganizations([...organizations, newOrg]);
-    setSelectedOrgId(newOrg.id);
-    setShowOrgModal(false);
-    setOrgForm({ companyName: '', taxId: '', address: '', email: '', phone: '', industry: 'Technology' });
+    try {
+      const docRef = await db.collection('organizations').add({
+        ...orgForm,
+        createdAt: new Date()
+      });
+      setSelectedOrgId(docRef.id);
+      setShowOrgModal(false);
+      setOrgForm({ companyName: '', taxId: '', address: '', email: '', phone: '', industry: 'Technology' });
+    } catch (error) {
+      console.error('Error adding organization:', error);
+    }
   };
 
-  const handleUpdateOrg = (e: React.FormEvent) => {
+  const handleUpdateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOrganizations(organizations.map(o => o.id === selectedOrgId ? { ...o, ...currentOrg } : o));
-    alert("Organization profile updated!");
+    try {
+      await db.collection('organizations').doc(selectedOrgId).update({
+        companyName: currentOrg.companyName,
+        industry: currentOrg.industry,
+        address: currentOrg.address,
+        email: currentOrg.email,
+        phone: currentOrg.phone
+      });
+      alert("Organization profile updated!");
+    } catch (error) {
+      console.error('Error updating organization:', error);
+    }
   };
 
-  const handleDeleteOrg = (id: string) => {
+  const handleDeleteOrg = async (id: string) => {
     if (organizations.length <= 1) return alert("At least one organization must remain.");
     if (!confirm("Are you sure? All associated data will be archived.")) return;
-    const remaining = organizations.filter(o => o.id !== id);
-    setOrganizations(remaining);
-    setSelectedOrgId(remaining[0].id);
+    try {
+      await db.collection('organizations').doc(id).delete();
+      const remaining = organizations.filter(o => o.id !== id);
+      if (remaining.length > 0) setSelectedOrgId(remaining[0].id);
+    } catch (error) {
+      console.error('Error deleting organization:', error);
+    }
   };
 
   // 2. Contact CRUD
-  const handleSaveContact = () => {
+  const handleSaveContact = async () => {
     if (!contactForm.name) return;
-    if (editingId) {
-      setContacts(contacts.map(c => c.id === editingId ? { ...c, ...contactForm } : c));
-    } else {
-      setContacts([...contacts, { ...contactForm, id: `C-${Date.now()}`, orgId: selectedOrgId }]);
+    try {
+      if (editingId) {
+        await db.collection('contacts').doc(editingId).update(contactForm);
+      } else {
+        await db.collection('contacts').add({
+          ...contactForm,
+          orgId: selectedOrgId,
+          createdAt: new Date()
+        });
+      }
+      setShowContactModal(false);
+      setEditingId(null);
+      setContactForm({ name: '', role: '', email: '', isPrimary: false });
+    } catch (error) {
+      console.error('Error saving contact:', error);
     }
-    setShowContactModal(false);
-    setEditingId(null);
   };
 
-  const deleteContact = (id: string) => setContacts(contacts.filter(c => c.id !== id));
+  const deleteContact = async (id: string) => {
+    try {
+      await db.collection('contacts').doc(id).delete();
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+    }
+  };
 
   // 3. Ticket CRUD (Technical Support)
-  const handleSaveTicket = () => {
-    if (!ticketForm.subject) return;
-    if (editingId) {
-      setTickets(tickets.map(t => t.id === editingId ? { ...t, ...ticketForm } : t));
-    } else {
-      setTickets([...tickets, { ...ticketForm, id: `T-${Date.now()}`, orgId: selectedOrgId, createdAt: new Date().toISOString().split('T')[0] }]);
+  const handleSaveTicket = async () => {
+    if (!ticketForm.subject || !selectedOrgId) return;
+    try {
+      if (editingId) {
+        await db.collection('tickets').doc(editingId).update(ticketForm);
+      } else {
+        await db.collection('tickets').add({
+          ...ticketForm,
+          orgId: selectedOrgId,
+          createdAt: new Date()
+        });
+      }
+      setShowTicketModal(false);
+      setEditingId(null);
+      setTicketForm({ subject: '', priority: 'Medium', status: 'Open' });
+    } catch (error) {
+      console.error('Error saving ticket:', error);
     }
-    setShowTicketModal(false);
-    setEditingId(null);
-    setTicketForm({ subject: '', priority: 'Medium', status: 'Open' });
   };
 
-  const deleteTicket = (id: string) => setTickets(tickets.filter(t => t.id !== id));
+  const deleteTicket = async (id: string) => {
+    try {
+      await db.collection('tickets').doc(id).delete();
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    }
+  };
 
   // 4. Payment CRUD (Billing)
   const handleSavePayment = () => {
@@ -214,6 +281,31 @@ const ClientDashboard: React.FC = () => {
     <div className="min-h-screen bg-slate-50 pt-20">
       <Navbar variant="landing" />
       
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600 font-bold">Loading...</p>
+          </div>
+        </div>
+      ) : organizations.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center max-w-md">
+            <Building2 className="w-20 h-20 text-slate-300 mx-auto mb-6" />
+            <h2 className="text-2xl font-black text-slate-900 mb-4">No Organizations</h2>
+            <p className="text-slate-500 mb-8">Create your first organization to get started</p>
+            <button 
+              onClick={() => {
+                setOrgForm({ companyName: '', taxId: '', address: '', email: '', phone: '', industry: 'Technology' });
+                setShowOrgModal(true);
+              }}
+              className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 inline-flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" /> Create Organization
+            </button>
+          </div>
+        </div>
+      ) : (
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <button 
@@ -609,6 +701,7 @@ const ClientDashboard: React.FC = () => {
           </div>
         </div>
       </main>
+      )}
 
       {/* --- MODALS FOR CRUD --- */}
 

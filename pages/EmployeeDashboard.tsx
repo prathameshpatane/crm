@@ -34,7 +34,9 @@ import {
   Wallet,
   TrendingUp,
   Banknote,
-  Download
+  Download,
+  MapPin,
+  AlertCircle
 } from 'lucide-react';
 
 interface EmployeeDashboardProps {
@@ -47,10 +49,31 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [history, setHistory] = useState<AttendanceRecord[]>(mockAttendance.filter(a => a.userId === user.id));
+  const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [locationError, setLocationError] = useState<string>('');
   
   // Timer states
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  // Request location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude, address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+          setLocationError('');
+        },
+        (error) => {
+          setLocationError('Location access denied. Please enable location services.');
+          console.error('Location error:', error);
+        }
+      );
+    } else {
+      setLocationError('Geolocation is not supported by this browser.');
+    }
+  }, []);
 
   // Salary Constants (Mock Data)
   const MONTHLY_SALARY = 4400; // Base salary
@@ -614,6 +637,18 @@ Date: ${new Date().toLocaleDateString()}
                       <Briefcase className="w-3.5 h-3.5" />
                       {user.department} Department
                     </p>
+                    {location && (
+                      <p className="text-xs font-medium text-emerald-600 mt-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Location: {location.address}
+                      </p>
+                    )}
+                    {locationError && (
+                      <p className="text-xs font-medium text-rose-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {locationError}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
