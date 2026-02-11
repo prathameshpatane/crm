@@ -29,14 +29,16 @@ import {
   Globe,
   MoreVertical,
   AlertOctagon,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  Receipt
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { ClientProfile, ActivityLog, SupportTicket, PaymentMethod, ClientContact } from '../types';
+import { ClientProfile, ActivityLog, SupportTicket, PaymentMethod, ClientContact, Quotation, Invoice } from '../types';
 
 const ClientDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'activity' | 'selfservice'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'activity' | 'selfservice' | 'quotations' | 'invoices'>('overview');
   
   // --- STATE FOR MULTI-ORGANIZATION CRUD ---
   
@@ -57,6 +59,8 @@ const ClientDashboard: React.FC = () => {
     { id: 'P-1', orgId: 'ORG-1', type: "Visa", lastFour: "4242", expiry: "09/25", isDefault: true },
     { id: 'P-2', orgId: 'ORG-2', type: "Amex", lastFour: "8888", expiry: "12/26", isDefault: true }
   ]);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   const currentOrg = useMemo(() => 
     organizations.find(o => o.id === selectedOrgId) || organizations[0] || { companyName: '', taxId: '', address: '', email: '', phone: '', industry: '' }, 
@@ -78,12 +82,22 @@ const ClientDashboard: React.FC = () => {
     logs.filter(l => l.orgId === selectedOrgId),
   [logs, selectedOrgId]);
 
+  const currentQuotations = useMemo(() => 
+    quotations.filter(q => q.orgId === selectedOrgId),
+  [quotations, selectedOrgId]);
+
+  const currentInvoices = useMemo(() => 
+    invoices.filter(i => i.orgId === selectedOrgId),
+  [invoices, selectedOrgId]);
+
   // Modals / Forms state
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showQuotationModal, setShowQuotationModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   // Form states
   const [orgForm, setOrgForm] = useState<Omit<ClientProfile, 'id'>>({
@@ -97,6 +111,12 @@ const ClientDashboard: React.FC = () => {
   });
   const [paymentForm, setPaymentForm] = useState<Omit<PaymentMethod, 'id' | 'orgId'>>({
     type: 'Visa', lastFour: '', expiry: '', isDefault: false
+  });
+  const [quotationForm, setQuotationForm] = useState<Omit<Quotation, 'id' | 'orgId'>>({
+    quotationNumber: '', date: '', clientName: '', description: '', totalAmount: 0, validityDate: '', companyName: '', contactInfo: '', terms: ''
+  });
+  const [invoiceForm, setInvoiceForm] = useState<Omit<Invoice, 'id' | 'orgId'>>({
+    invoiceNumber: '', invoiceDate: '', clientName: '', clientContact: '', companyName: '', companyContact: '', description: '', totalAmount: 0, taxDetails: '', dueDate: '', paymentStatus: 'Unpaid'
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -139,6 +159,24 @@ const ClientDashboard: React.FC = () => {
         } as SupportTicket;
       });
       setTickets(ticketsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load quotations from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('quotations').onSnapshot(snapshot => {
+      const quotationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Quotation));
+      setQuotations(quotationsData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load invoices from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('invoices').onSnapshot(snapshot => {
+      const invoicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
+      setInvoices(invoicesData);
     });
     return () => unsubscribe();
   }, []);
@@ -262,6 +300,152 @@ const ClientDashboard: React.FC = () => {
 
   const deletePayment = (id: string) => setPayments(payments.filter(p => p.id !== id));
 
+  // 5. Quotation CRUD
+  const handleSaveQuotation = async () => {
+    if (!quotationForm.clientName || !selectedOrgId) return;
+    try {
+      if (editingId) {
+        await db.collection('quotations').doc(editingId).update(quotationForm);
+      } else {
+        await db.collection('quotations').add({
+          ...quotationForm,
+          orgId: selectedOrgId,
+          quotationNumber: `QT-${Date.now()}`,
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+      setShowQuotationModal(false);
+      setEditingId(null);
+      setQuotationForm({ quotationNumber: '', date: '', clientName: '', description: '', totalAmount: 0, validityDate: '', companyName: '', contactInfo: '', terms: '' });
+    } catch (error) {
+      console.error('Error saving quotation:', error);
+    }
+  };
+
+  const deleteQuotation = async (id: string) => {
+    try {
+      await db.collection('quotations').doc(id).delete();
+    } catch (error) {
+      console.error('Error deleting quotation:', error);
+    }
+  };
+
+  const downloadQuotationPDF = (quotation: Quotation) => {
+    const content = `
+=========================================
+           QUOTATION
+=========================================
+Quotation Number: ${quotation.quotationNumber}
+Date: ${quotation.date}
+-----------------------------------------
+CLIENT INFORMATION
+Client Name: ${quotation.clientName}
+-----------------------------------------
+COMPANY INFORMATION
+Company: ${quotation.companyName}
+Contact: ${quotation.contactInfo}
+-----------------------------------------
+DESCRIPTION OF SERVICE/PRODUCT
+${quotation.description}
+-----------------------------------------
+FINANCIAL DETAILS
+Total Amount: $${quotation.totalAmount.toLocaleString()}
+-----------------------------------------
+VALIDITY
+Valid Until: ${quotation.validityDate}
+-----------------------------------------
+TERMS & CONDITIONS
+${quotation.terms}
+=========================================
+Generated via AttendX Platform
+Date: ${new Date().toLocaleDateString()}
+=========================================
+    `.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Quotation_${quotation.quotationNumber}_${quotation.clientName.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 6. Invoice CRUD
+  const handleSaveInvoice = async () => {
+    if (!invoiceForm.clientName || !selectedOrgId) return;
+    try {
+      if (editingId) {
+        await db.collection('invoices').doc(editingId).update(invoiceForm);
+      } else {
+        await db.collection('invoices').add({
+          ...invoiceForm,
+          orgId: selectedOrgId,
+          invoiceNumber: `INV-${Date.now()}`,
+          invoiceDate: new Date().toISOString().split('T')[0]
+        });
+      }
+      setShowInvoiceModal(false);
+      setEditingId(null);
+      setInvoiceForm({ invoiceNumber: '', invoiceDate: '', clientName: '', clientContact: '', companyName: '', companyContact: '', description: '', totalAmount: 0, taxDetails: '', dueDate: '', paymentStatus: 'Unpaid' });
+    } catch (error) {
+      console.error('Error saving invoice:', error);
+    }
+  };
+
+  const deleteInvoice = async (id: string) => {
+    try {
+      await db.collection('invoices').doc(id).delete();
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+    }
+  };
+
+  const downloadInvoicePDF = (invoice: Invoice) => {
+    const content = `
+=========================================
+           INVOICE
+=========================================
+Invoice Number: ${invoice.invoiceNumber}
+Invoice Date: ${invoice.invoiceDate}
+-----------------------------------------
+CLIENT INFORMATION
+Client Name: ${invoice.clientName}
+Contact: ${invoice.clientContact}
+-----------------------------------------
+COMPANY INFORMATION
+Company: ${invoice.companyName}
+Contact: ${invoice.companyContact}
+-----------------------------------------
+DESCRIPTION OF SERVICE/PRODUCT
+${invoice.description}
+-----------------------------------------
+FINANCIAL DETAILS
+Total Amount: $${invoice.totalAmount.toLocaleString()}
+Tax Details: ${invoice.taxDetails}
+-----------------------------------------
+PAYMENT INFORMATION
+Due Date: ${invoice.dueDate}
+Payment Status: ${invoice.paymentStatus}
+=========================================
+Generated via AttendX Platform
+Date: ${new Date().toLocaleDateString()}
+=========================================
+    `.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Invoice_${invoice.invoiceNumber}_${invoice.clientName.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // --- TAB UI ---
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
@@ -365,6 +549,8 @@ const ClientDashboard: React.FC = () => {
           <div className="flex border-b border-slate-100 px-6 overflow-x-auto scrollbar-hide bg-slate-50/30">
             <TabButton id="overview" label="Performance" icon={BarChart} />
             <TabButton id="profile" label="Organization Profile" icon={User} />
+            <TabButton id="quotations" label="Quotations" icon={FileText} />
+            <TabButton id="invoices" label="Invoices" icon={Receipt} />
             <TabButton id="activity" label="Security Audits" icon={History} />
             <TabButton id="selfservice" label="Admin Console" icon={Settings} />
           </div>
@@ -563,6 +749,127 @@ const ClientDashboard: React.FC = () => {
                       </div>
                     )}
                  </div>
+              </div>
+            )}
+
+            {activeTab === 'quotations' && (
+              <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-10">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Quotations</h3>
+                  <button 
+                    onClick={() => {
+                      setQuotationForm({ quotationNumber: '', date: '', clientName: '', description: '', totalAmount: 0, validityDate: '', companyName: '', contactInfo: '', terms: '' });
+                      setEditingId(null);
+                      setShowQuotationModal(true);
+                    }}
+                    className="px-8 py-4 bg-indigo-600 text-white rounded-[20px] font-black text-sm hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" /> New Quotation
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {currentQuotations.map(q => (
+                    <div key={q.id} className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm hover:shadow-xl transition-all">
+                      <div className="flex items-start justify-between mb-6">
+                        <div>
+                          <div className="text-xs font-bold text-slate-400 mb-1">{q.quotationNumber}</div>
+                          <h4 className="text-lg font-black text-slate-800">{q.clientName}</h4>
+                        </div>
+                        <span className="text-emerald-600 font-black text-xl">${q.totalAmount}</span>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-4">{q.description}</p>
+                      <div className="text-xs text-slate-400 mb-6">Valid until: {q.validityDate}</div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => downloadQuotationPDF(q)}
+                          className="flex-1 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Download
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setEditingId(q.id);
+                            setQuotationForm({ quotationNumber: q.quotationNumber, date: q.date, clientName: q.clientName, description: q.description, totalAmount: q.totalAmount, validityDate: q.validityDate, companyName: q.companyName, contactInfo: q.contactInfo, terms: q.terms });
+                            setShowQuotationModal(true);
+                          }}
+                          className="flex-1 py-3 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteQuotation(q.id)}
+                          className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'invoices' && (
+              <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-10">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Invoices</h3>
+                  <button 
+                    onClick={() => {
+                      setInvoiceForm({ invoiceNumber: '', invoiceDate: '', clientName: '', clientContact: '', companyName: '', companyContact: '', description: '', totalAmount: 0, taxDetails: '', dueDate: '', paymentStatus: 'Unpaid' });
+                      setEditingId(null);
+                      setShowInvoiceModal(true);
+                    }}
+                    className="px-8 py-4 bg-indigo-600 text-white rounded-[20px] font-black text-sm hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" /> New Invoice
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {currentInvoices.map(inv => (
+                    <div key={inv.id} className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm hover:shadow-xl transition-all">
+                      <div className="flex items-start justify-between mb-6">
+                        <div>
+                          <div className="text-xs font-bold text-slate-400 mb-1">{inv.invoiceNumber}</div>
+                          <h4 className="text-lg font-black text-slate-800">{inv.clientName}</h4>
+                        </div>
+                        <span className={`px-3 py-1 rounded-xl text-xs font-black ${
+                          inv.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                          inv.paymentStatus === 'Partial' ? 'bg-amber-50 text-amber-600' :
+                          'bg-rose-50 text-rose-600'
+                        }`}>{inv.paymentStatus}</span>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-4">{inv.description}</p>
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-2xl font-black text-slate-900">${inv.totalAmount}</span>
+                        <span className="text-xs text-slate-400">Due: {inv.dueDate}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => downloadInvoicePDF(inv)}
+                          className="flex-1 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Download
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setEditingId(inv.id);
+                            setInvoiceForm({ invoiceNumber: inv.invoiceNumber, invoiceDate: inv.invoiceDate, clientName: inv.clientName, clientContact: inv.clientContact, companyName: inv.companyName, companyContact: inv.companyContact, description: inv.description, totalAmount: inv.totalAmount, taxDetails: inv.taxDetails, dueDate: inv.dueDate, paymentStatus: inv.paymentStatus });
+                            setShowInvoiceModal(true);
+                          }}
+                          className="flex-1 py-3 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteInvoice(inv.id)}
+                          className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -855,6 +1162,110 @@ const ClientDashboard: React.FC = () => {
                    <button onClick={handleSaveContact} className="flex-1 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700">Grant Access</button>
                 </div>
              </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quotation CRUD Modal */}
+      {showQuotationModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl p-10 animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{editingId ? 'Edit Quotation' : 'New Quotation'}</h3>
+              <button onClick={() => setShowQuotationModal(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600"><X /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Name</label>
+                <input type="text" value={quotationForm.clientName} onChange={e => setQuotationForm({...quotationForm, clientName: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</label>
+                <input type="number" value={quotationForm.totalAmount} onChange={e => setQuotationForm({...quotationForm, totalAmount: Number(e.target.value)})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                <textarea value={quotationForm.description} onChange={e => setQuotationForm({...quotationForm, description: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Validity Date</label>
+                <input type="date" value={quotationForm.validityDate} onChange={e => setQuotationForm({...quotationForm, validityDate: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</label>
+                <input type="text" value={quotationForm.companyName} onChange={e => setQuotationForm({...quotationForm, companyName: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact Info</label>
+                <input type="text" value={quotationForm.contactInfo} onChange={e => setQuotationForm({...quotationForm, contactInfo: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Terms & Conditions</label>
+                <textarea value={quotationForm.terms} onChange={e => setQuotationForm({...quotationForm, terms: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} />
+              </div>
+              <div className="col-span-2 flex gap-4 pt-8">
+                <button onClick={() => setShowQuotationModal(false)} className="flex-1 py-5 bg-slate-50 text-slate-500 rounded-3xl font-black">Cancel</button>
+                <button onClick={handleSaveQuotation} className="flex-1 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl hover:bg-indigo-700">Save Quotation</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice CRUD Modal */}
+      {showInvoiceModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl p-10 animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{editingId ? 'Edit Invoice' : 'New Invoice'}</h3>
+              <button onClick={() => setShowInvoiceModal(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600"><X /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Name</label>
+                <input type="text" value={invoiceForm.clientName} onChange={e => setInvoiceForm({...invoiceForm, clientName: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Contact</label>
+                <input type="text" value={invoiceForm.clientContact} onChange={e => setInvoiceForm({...invoiceForm, clientContact: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Name</label>
+                <input type="text" value={invoiceForm.companyName} onChange={e => setInvoiceForm({...invoiceForm, companyName: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Company Contact</label>
+                <input type="text" value={invoiceForm.companyContact} onChange={e => setInvoiceForm({...invoiceForm, companyContact: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                <textarea value={invoiceForm.description} onChange={e => setInvoiceForm({...invoiceForm, description: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</label>
+                <input type="number" value={invoiceForm.totalAmount} onChange={e => setInvoiceForm({...invoiceForm, totalAmount: Number(e.target.value)})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tax Details</label>
+                <input type="text" value={invoiceForm.taxDetails} onChange={e => setInvoiceForm({...invoiceForm, taxDetails: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Date</label>
+                <input type="date" value={invoiceForm.dueDate} onChange={e => setInvoiceForm({...invoiceForm, dueDate: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment Status</label>
+                <select value={invoiceForm.paymentStatus} onChange={e => setInvoiceForm({...invoiceForm, paymentStatus: e.target.value as any})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl font-bold outline-none">
+                  <option>Unpaid</option>
+                  <option>Paid</option>
+                  <option>Partial</option>
+                </select>
+              </div>
+              <div className="col-span-2 flex gap-4 pt-8">
+                <button onClick={() => setShowInvoiceModal(false)} className="flex-1 py-5 bg-slate-50 text-slate-500 rounded-3xl font-black">Cancel</button>
+                <button onClick={handleSaveInvoice} className="flex-1 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl hover:bg-indigo-700">Save Invoice</button>
+              </div>
+            </div>
           </div>
         </div>
       )}

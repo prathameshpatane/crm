@@ -77,3 +77,33 @@ export interface PaymentMethod {
   expiry: string;
   isDefault: boolean;
 }
+
+export interface Quotation {
+  id: string;
+  orgId: string;
+  quotationNumber: string;
+  date: string;
+  clientName: string;
+  description: string;
+  totalAmount: number;
+  validityDate: string;
+  companyName: string;
+  contactInfo: string;
+  terms: string;
+}
+
+export interface Invoice {
+  id: string;
+  orgId: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  clientName: string;
+  clientContact: string;
+  companyName: string;
+  companyContact: string;
+  description: string;
+  totalAmount: number;
+  taxDetails: string;
+  dueDate: string;
+  paymentStatus: 'Unpaid' | 'Paid' | 'Partial';
+}
