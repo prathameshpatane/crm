@@ -90,7 +90,7 @@ const LandingPage: React.FC = () => {
                 </div>
                 <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm translate-y-8">
                   <Rocket className="w-10 h-10 text-sky-400 mb-4" />
-                  <h4 className="text-white font-bold mb-2">WARocket Power</h4>
+                  <h4 className="text-white font-bold mb-2">Rocket Sender Power</h4>
                   <p className="text-slate-400 text-sm">Leverage specialized automation for high-volume messaging.</p>
                 </div>
               </div>
@@ -105,7 +105,7 @@ const LandingPage: React.FC = () => {
                 WhatsApp Attendance Automation
               </h2>
               <p className="text-lg text-slate-400 mb-10 leading-relaxed font-medium">
-                Connect your workspace directly to WhatsApp using the WARocket extension. Send automated check-in reminders, broadcast company announcements, and manage your workforce where they already are.
+                Connect your workspace directly to WhatsApp using the Rocket Sender extension. Send automated check-in reminders, broadcast company announcements, and manage your workforce where they already are.
               </p>
               <Link 
                 to="/whatsapp-automation" 
@@ -278,9 +278,9 @@ const LandingPage: React.FC = () => {
             <div>
               <h4 className="text-white font-bold mb-8 uppercase tracking-widest text-xs">Product</h4>
               <ul className="space-y-4">
-                {['Features', 'Integrations', 'Pricing', 'WARocket Guide', 'API Documentation'].map((item, i) => (
+                {['Features', 'Integrations', 'Pricing', 'Rocket Sender Guide', 'API Documentation'].map((item, i) => (
                   <li key={i}>
-                    <Link to={item === 'WARocket Guide' ? '/whatsapp-automation' : '#'} className="text-slate-400 font-medium hover:text-indigo-400 transition-colors">
+                    <Link to={item === 'Rocket Sender Guide' ? '/whatsapp-automation' : '#'} className="text-slate-400 font-medium hover:text-indigo-400 transition-colors">
                       {item}
                     </Link>
                   </li>

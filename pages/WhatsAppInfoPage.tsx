@@ -19,7 +19,7 @@ interface WhatsAppInfoPageProps {
 
 const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
   const navigate = useNavigate();
-  const WA_ROCKET_URL = 'https://chromewebstore.google.com/detail/warocket/jcfgjifalfldkffiklbhkkddhcpfehio';
+  const WA_ROCKET_URL = 'https://chromewebstore.google.com/detail/rocket-sender-bulk-whatsa/hmpoalkkjnapmpfgleamekjhhfenpodc';
 
   const steps = [
     {
@@ -31,8 +31,8 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
     },
     {
       icon: Puzzle,
-      title: "Pin WARocket",
-      description: "After installation, pin WARocket from the Extensions (🧩) icon in your browser toolbar.",
+      title: "Pin Rocket Sender",
+      description: "After installation, pin Rocket Sender from the Extensions (🧩) icon in your browser toolbar.",
     },
     {
       icon: MousePointer2,
@@ -49,7 +49,7 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
     {
       icon: Settings,
       title: "Configure Features",
-      description: "Click the WARocket icon and configure its features from the side panel.",
+      description: "Click the Rocket Sender icon and configure its features from the side panel.",
     }
   ];
 
@@ -71,7 +71,7 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Settings className="w-48 h-48 rotate-12" />
             </div>
-            <h1 className="text-4xl font-black mb-4 relative z-10">WARocket Setup</h1>
+            <h1 className="text-4xl font-black mb-4 relative z-10">Rocket Sender Setup</h1>
             <p className="text-emerald-50 text-lg font-medium max-w-xl relative z-10">
               Follow these simple steps to enable powerful WhatsApp broadcasting and automation for your workforce.
             </p>
@@ -114,7 +114,7 @@ const WhatsAppInfoPage: React.FC<WhatsAppInfoPageProps> = ({ onLogout }) => {
               onClick={() => window.open(WA_ROCKET_URL, '_blank')}
               className="w-full md:w-auto px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all active:scale-95"
             >
-              Get WARocket Extension
+              Get Rocket Sender Extension
             </button>
           </div>
         </div>

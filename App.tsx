@@ -8,6 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import WhatsAppInfoPage from './pages/WhatsAppInfoPage';
 import { User, UserRole } from './types';
+import { auth } from './lib/firebase';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,6 +27,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    auth.signOut();
     setUser(null);
     localStorage.removeItem('attendx_user');
   };

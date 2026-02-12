@@ -15,6 +15,7 @@ import {
 import Navbar from '../components/Navbar';
 import { User, AttendanceRecord } from '../types';
 import { mockAttendance } from '../mockData';
+import { db } from '../lib/firebase';
 import { 
   Clock, 
   Calendar, 
@@ -48,13 +49,28 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
   const [checkedIn, setCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [history, setHistory] = useState<AttendanceRecord[]>(mockAttendance.filter(a => a.userId === user.id));
+  const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [locationError, setLocationError] = useState<string>('');
   
   // Timer states
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  // Load attendance history from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('attendance')
+      .where('userId', '==', user.id)
+      .orderBy('date', 'desc')
+      .onSnapshot((snapshot) => {
+        const records: AttendanceRecord[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as AttendanceRecord));
+        setHistory(records);
+      });
+    return () => unsubscribe();
+  }, [user.id]);
 
   // Request location on mount
   useEffect(() => {
@@ -131,7 +147,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
     return { h, m, s, formatted: `${h}h ${m}m ${s}s` };
   };
 
-  const handleToggleCheckIn = () => {
+  const handleToggleCheckIn = async () => {
     const now = new Date();
     const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -142,19 +158,68 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
     } else {
       const checkOutTime = timeString;
       const totalHrs = parseFloat((elapsedSeconds / 3600).toFixed(2));
+      const dateStr = now.toISOString().split('T')[0];
       
-      const newRecord: AttendanceRecord = {
-        id: Date.now().toString(),
+      const newRecord = {
         userId: user.id,
-        date: now.toISOString().split('T')[0],
+        userName: user.name,
+        userEmail: user.email,
+        department: user.department,
+        date: dateStr,
         checkIn: checkInTime || '--:--',
         checkOut: checkOutTime,
-        status: 'Present',
-        totalHours: totalHrs
+        status: 'Present' as const,
+        totalHours: totalHrs,
+        location: location ? `${location.lat}, ${location.lng}` : 'N/A',
+        timestamp: now.toISOString()
       };
 
-      setHistory((prev) => [newRecord, ...prev]);
-      setCheckedIn(false);
+      try {
+        // Save to attendance collection
+        const attendanceRef = await db.collection('attendance').add(newRecord);
+        
+        // Save to attendance reports collection
+        await db.collection('attendanceReports').add({
+          ...newRecord,
+          attendanceId: attendanceRef.id,
+          reportGeneratedAt: now.toISOString()
+        });
+        
+        // Update salary payroll collection
+        const payrollRef = db.collection('salaryPayrolls').doc(`${user.id}_${new Date().getFullYear()}_${new Date().getMonth() + 1}`);
+        const payrollDoc = await payrollRef.get();
+        
+        if (payrollDoc.exists) {
+          const currentData = payrollDoc.data();
+          await payrollRef.update({
+            daysWorked: (currentData?.daysWorked || 0) + 1,
+            totalHours: (currentData?.totalHours || 0) + totalHrs,
+            lastUpdated: now.toISOString(),
+            attendanceRecords: [...(currentData?.attendanceRecords || []), attendanceRef.id]
+          });
+        } else {
+          await payrollRef.set({
+            userId: user.id,
+            userName: user.name,
+            userEmail: user.email,
+            department: user.department,
+            month: new Date().getMonth() + 1,
+            year: new Date().getFullYear(),
+            baseSalary: MONTHLY_SALARY,
+            daysWorked: 1,
+            totalHours: totalHrs,
+            totalWorkingDays: TOTAL_WORKING_DAYS,
+            createdAt: now.toISOString(),
+            lastUpdated: now.toISOString(),
+            attendanceRecords: [attendanceRef.id]
+          });
+        }
+        
+        setCheckedIn(false);
+      } catch (error) {
+        console.error('Error saving attendance:', error);
+        alert('Failed to save attendance. Please try again.');
+      }
     }
   };
 

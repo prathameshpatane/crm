@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
 
 interface LoginPageProps {
   onLogin: (user: any) => void;
@@ -52,30 +52,55 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const fullName = `${firstName} ${lastName}`;
+        const userId = userCredential.user.uid;
         
-        onLogin({
-          id: userCredential.user.uid,
+        const userData = {
+          id: userId,
           name: fullName,
           email: email,
           phone: '',
           role: 'EMPLOYEE',
           avatar: `https://i.pravatar.cc/150?u=${email}`,
-          department: 'Engineering'
-        });
+          department: 'Engineering',
+          createdAt: new Date().toISOString()
+        };
+        
+        // Store user profile in Firestore
+        await db.collection('users').doc(userId).set(userData);
+        
+        onLogin(userData);
         navigate('/dashboard');
       } else {
         // Login existing employee
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userId = userCredential.user.uid;
         
-        onLogin({
-          id: userCredential.user.uid,
-          name: email.split('@')[0], // Use email prefix as name (you can fetch from Firestore)
-          email: email,
-          phone: '',
-          role: 'EMPLOYEE',
-          avatar: `https://i.pravatar.cc/150?u=${email}`,
-          department: 'Engineering'
-        });
+        // Fetch user profile from Firestore
+        const userDoc = await db.collection('users').doc(userId).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          onLogin({
+            id: userId,
+            name: userData?.name || email.split('@')[0],
+            email: email,
+            phone: userData?.phone || '',
+            role: 'EMPLOYEE',
+            avatar: userData?.avatar || `https://i.pravatar.cc/150?u=${email}`,
+            department: userData?.department || 'Engineering'
+          });
+        } else {
+          // Fallback if user profile doesn't exist
+          onLogin({
+            id: userId,
+            name: email.split('@')[0],
+            email: email,
+            phone: '',
+            role: 'EMPLOYEE',
+            avatar: `https://i.pravatar.cc/150?u=${email}`,
+            department: 'Engineering'
+          });
+        }
         navigate('/dashboard');
       }
 
