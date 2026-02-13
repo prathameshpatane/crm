@@ -23,7 +23,9 @@ import {
   Layout,
   Briefcase,
   History,
-  CreditCard
+  CreditCard,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
@@ -112,6 +114,72 @@ const LandingPage: React.FC = () => {
                 className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/40 group"
               >
                 Learn How to Setup <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Lead Management Section */}
+      <section className="py-24 bg-gradient-to-br from-indigo-50 to-sky-50 overflow-hidden relative">
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 order-2 lg:order-1">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-indigo-600/5 blur-3xl rounded-[60px]"></div>
+                <div className="bg-white border border-slate-200 rounded-[32px] shadow-2xl overflow-hidden relative p-8">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-2xl">
+                      <Target className="w-8 h-8 text-red-600 mb-2" />
+                      <div className="text-2xl font-black text-red-900">247</div>
+                      <div className="text-xs text-red-700 font-bold">Hot Leads</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-2xl">
+                      <TrendingUp className="w-8 h-8 text-amber-600 mb-2" />
+                      <div className="text-2xl font-black text-amber-900">89%</div>
+                      <div className="text-xs text-amber-700 font-bold">Conversion</div>
+                    </div>
+                  </div>
+                  <div className="h-32 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center">
+                    <div className="text-slate-400 text-sm font-bold">Lead Pipeline View</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-600/10 border border-indigo-600/20 text-indigo-700 text-xs font-bold uppercase tracking-widest mb-6">
+                <Target className="w-4 h-4" />
+                Lead Tracking
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">
+                Lead Management System
+              </h2>
+              <p className="text-lg text-slate-600 mb-10 leading-relaxed font-medium">
+                Track, qualify, and convert leads with our comprehensive CRM. Monitor lead sources, engagement history, and qualification status all in one powerful workspace.
+              </p>
+              
+              <ul className="space-y-4 mb-10">
+                {[
+                  "Lead Source & Campaign Tracking",
+                  "Qualification & Scoring System",
+                  "Engagement & Interaction History",
+                  "Workspace for Organizations"
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-slate-700 font-bold">
+                    <div className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <Link 
+                to="/lead-management" 
+                className="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 group"
+              >
+                Launch Lead Manager <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
