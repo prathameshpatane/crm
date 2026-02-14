@@ -107,3 +107,18 @@ export interface Invoice {
   dueDate: string;
   paymentStatus: 'Unpaid' | 'Paid' | 'Partial';
 }
+
+export interface BusinessProposal {
+  id: string;
+  orgId: string;
+  proposalNumber: string;
+  clientName: string;
+  introduction: string;
+  problemStatement: string;
+  proposedSolution: string;
+  scopeOfWork: string;
+  imageUrls: string[];
+  pricing: number;
+  timeline: string;
+  createdAt: string;
+}

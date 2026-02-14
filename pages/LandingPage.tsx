@@ -328,7 +328,7 @@ const LandingPage: React.FC = () => {
                 <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-black tracking-tighter text-white">AttendX</span>
+                <span className="text-2xl font-black tracking-tighter text-white">ClientLeo</span>
               </div>
               <p className="text-slate-400 font-medium leading-relaxed">
                 The UI-first workforce platform designed to empower teams with real-time clarity and effortless attendance tracking.

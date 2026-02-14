@@ -32,7 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'landing', userName, onLogout
             <div className="bg-indigo-600 p-1.5 rounded-xl group-hover:rotate-12 transition-transform shadow-lg shadow-indigo-200/50">
               <Clock className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-black tracking-tighter text-slate-900">AttendX</span>
+            <span className="text-2xl font-black tracking-tighter text-slate-900">ClientLeo</span>
           </Link>
         </div>
 

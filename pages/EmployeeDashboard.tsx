@@ -16,6 +16,8 @@ import Navbar from '../components/Navbar';
 import { User, AttendanceRecord } from '../types';
 import { mockAttendance } from '../mockData';
 import { db } from '../lib/firebase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   Clock, 
   Calendar, 
@@ -224,48 +226,146 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
   };
 
   const handleDownloadPayslip = () => {
+    const doc = new jsPDF();
     const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-    const content = `
-=========================================
-          ATTENDX PAYROLL SLIP
-=========================================
-PERIOD: ${currentMonth}
------------------------------------------
-EMPLOYEE DETAILS
-Name: ${user.name}
-Employee ID: EMP-${user.id.padStart(4, '0')}
-Department: ${user.department}
-Email: ${user.email}
------------------------------------------
-SALARY STRUCTURE
-Base Monthly Salary: $${salaryData.monthly.toFixed(2)}
-Daily Rate: $${salaryData.daily.toFixed(2)}
------------------------------------------
-ATTENDANCE SUMMARY
-Days Worked: ${salaryData.daysWorked}
-Total Working Days: ${TOTAL_WORKING_DAYS}
-Attendance Rate: ${Math.round((salaryData.daysWorked / TOTAL_WORKING_DAYS) * 100)}%
------------------------------------------
-EARNINGS CALCULATION
-(Base / Working Days) * Days Worked
-($${salaryData.monthly.toFixed(2)} / ${TOTAL_WORKING_DAYS}) * ${salaryData.daysWorked}
------------------------------------------
-TOTAL PAYABLE: $${salaryData.payable.toFixed(2)}
-=========================================
-Generated via AttendX Platform
-Date: ${new Date().toLocaleDateString()}
-=========================================
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Payslip_${user.name.replace(/\s+/g, '_')}_${currentMonth.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const attendanceRate = Math.round((salaryData.daysWorked / TOTAL_WORKING_DAYS) * 100);
+    
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 210, 45, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYROLL SLIP', 105, 22, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text('ClientLeo Platform', 105, 32, { align: 'center' });
+    doc.setFontSize(9);
+    doc.text(`Period: ${currentMonth}`, 105, 39, { align: 'center' });
+    
+    // Employee Details Table
+    doc.setTextColor(0, 0, 0);
+    autoTable(doc, {
+      startY: 55,
+      head: [['Employee Details', '']],
+      body: [
+        ['Name', user.name],
+        ['Employee ID', `EMP-${user.id.padStart(4, '0')}`],
+        ['Department', user.department],
+        ['Email', user.email]
+      ],
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [79, 70, 229], 
+        textColor: [255, 255, 255], 
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 50 },
+        1: { cellWidth: 140 }
+      }
+    });
+    
+    // Salary Structure Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Salary Structure', 'Amount']],
+      body: [
+        ['Base Monthly Salary', `$${salaryData.monthly.toFixed(2)}`],
+        ['Daily Rate', `$${salaryData.daily.toFixed(2)}`]
+      ],
+      theme: 'striped',
+      headStyles: { 
+        fillColor: [79, 70, 229], 
+        textColor: [255, 255, 255], 
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'right', fontStyle: 'bold', textColor: [79, 70, 229] }
+      }
+    });
+    
+    // Attendance Summary Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Attendance Summary', 'Value']],
+      body: [
+        ['Days Worked', `${salaryData.daysWorked} days`],
+        ['Total Working Days', `${TOTAL_WORKING_DAYS} days`],
+        ['Attendance Rate', `${attendanceRate}%`]
+      ],
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [16, 185, 129], 
+        textColor: [255, 255, 255], 
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        1: { halign: 'right', fontStyle: 'bold' }
+      }
+    });
+    
+    // Earnings Calculation Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Earnings Calculation']],
+      body: [
+        ['Formula: (Base Salary / Total Working Days) × Days Worked'],
+        [`($${salaryData.monthly.toFixed(2)} / ${TOTAL_WORKING_DAYS}) × ${salaryData.daysWorked}`],
+        [`= $${salaryData.daily.toFixed(2)} × ${salaryData.daysWorked}`]
+      ],
+      theme: 'plain',
+      headStyles: { 
+        fillColor: [79, 70, 229], 
+        textColor: [255, 255, 255], 
+        fontStyle: 'bold',
+        fontSize: 11
+      },
+      styles: { fontSize: 9, textColor: [100, 116, 139] },
+      bodyStyles: { halign: 'center' }
+    });
+    
+    // Total Payable (Highlighted)
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['TOTAL PAYABLE', `$${salaryData.payable.toFixed(2)}`]],
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [16, 185, 129], 
+        textColor: [255, 255, 255], 
+        fontStyle: 'bold',
+        fontSize: 14,
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 100 },
+        1: { halign: 'right', cellWidth: 90 }
+      }
+    });
+    
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text('Generated via ClientLeo Platform', 14, 285);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 285, { align: 'center' });
+    doc.text(`Page ${pageCount}`, 196, 285, { align: 'right' });
+    
+    // Signature Line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(140, 270, 190, 270);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Authorized Signature', 165, 275, { align: 'center' });
+    
+    doc.save(`Payslip_${user.name.replace(/\s+/g, '_')}_${currentMonth.replace(/\s+/g, '_')}.pdf`);
   };
 
   const SidebarItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => {

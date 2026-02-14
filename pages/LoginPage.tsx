@@ -128,7 +128,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div>
           <Clock className="w-12 h-12 mb-6" />
           <h2 className="text-4xl font-bold mb-4">
-            Welcome to AttendX
+            Welcome to ClientLeo
           </h2>
           <p className="text-indigo-100">
             Workforce management made simple.

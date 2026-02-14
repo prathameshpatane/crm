@@ -2,6 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   Briefcase, 
   Settings, 
@@ -34,11 +36,11 @@ import {
   Receipt
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { ClientProfile, ActivityLog, SupportTicket, PaymentMethod, ClientContact, Quotation, Invoice } from '../types';
+import { ClientProfile, ActivityLog, SupportTicket, PaymentMethod, ClientContact, Quotation, Invoice, BusinessProposal } from '../types';
 
 const ClientDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'activity' | 'selfservice' | 'quotations' | 'invoices'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'activity' | 'selfservice' | 'proposals' | 'quotations' | 'invoices'>('overview');
   
   // --- STATE FOR MULTI-ORGANIZATION CRUD ---
   
@@ -61,6 +63,7 @@ const ClientDashboard: React.FC = () => {
   ]);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [proposals, setProposals] = useState<BusinessProposal[]>([]);
 
   const currentOrg = useMemo(() => 
     organizations.find(o => o.id === selectedOrgId) || organizations[0] || { companyName: '', taxId: '', address: '', email: '', phone: '', industry: '' }, 
@@ -90,6 +93,10 @@ const ClientDashboard: React.FC = () => {
     invoices.filter(i => i.orgId === selectedOrgId),
   [invoices, selectedOrgId]);
 
+  const currentProposals = useMemo(() => 
+    proposals.filter(p => p.orgId === selectedOrgId),
+  [proposals, selectedOrgId]);
+
   // Modals / Forms state
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -98,6 +105,7 @@ const ClientDashboard: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showQuotationModal, setShowQuotationModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showProposalModal, setShowProposalModal] = useState(false);
 
   // Form states
   const [orgForm, setOrgForm] = useState<Omit<ClientProfile, 'id'>>({
@@ -117,6 +125,9 @@ const ClientDashboard: React.FC = () => {
   });
   const [invoiceForm, setInvoiceForm] = useState<Omit<Invoice, 'id' | 'orgId'>>({
     invoiceNumber: '', invoiceDate: '', clientName: '', clientContact: '', companyName: '', companyContact: '', description: '', totalAmount: 0, taxDetails: '', dueDate: '', paymentStatus: 'Unpaid'
+  });
+  const [proposalForm, setProposalForm] = useState<Omit<BusinessProposal, 'id' | 'orgId' | 'createdAt'>>({
+    proposalNumber: '', clientName: '', introduction: '', problemStatement: '', proposedSolution: '', scopeOfWork: '', imageUrls: [], pricing: 0, timeline: ''
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -177,6 +188,15 @@ const ClientDashboard: React.FC = () => {
     const unsubscribe = db.collection('invoices').onSnapshot(snapshot => {
       const invoicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
       setInvoices(invoicesData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load proposals from Firestore
+  useEffect(() => {
+    const unsubscribe = db.collection('proposals').onSnapshot(snapshot => {
+      const proposalsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BusinessProposal));
+      setProposals(proposalsData);
     });
     return () => unsubscribe();
   }, []);
@@ -331,46 +351,81 @@ const ClientDashboard: React.FC = () => {
   };
 
   const downloadQuotationPDF = (quotation: Quotation) => {
-    const content = `
-=========================================
-           QUOTATION
-=========================================
-Quotation Number: ${quotation.quotationNumber}
-Date: ${quotation.date}
------------------------------------------
-CLIENT INFORMATION
-Client Name: ${quotation.clientName}
------------------------------------------
-COMPANY INFORMATION
-Company: ${quotation.companyName}
-Contact: ${quotation.contactInfo}
------------------------------------------
-DESCRIPTION OF SERVICE/PRODUCT
-${quotation.description}
------------------------------------------
-FINANCIAL DETAILS
-Total Amount: $${quotation.totalAmount.toLocaleString()}
------------------------------------------
-VALIDITY
-Valid Until: ${quotation.validityDate}
------------------------------------------
-TERMS & CONDITIONS
-${quotation.terms}
-=========================================
-Generated via AttendX Platform
-Date: ${new Date().toLocaleDateString()}
-=========================================
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Quotation_${quotation.quotationNumber}_${quotation.clientName.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('QUOTATION', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('ClientLeo Platform', 105, 30, { align: 'center' });
+    
+    // Quotation Details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Quotation #: ${quotation.quotationNumber}`, 14, 50);
+    doc.text(`Date: ${quotation.date}`, 14, 56);
+    doc.text(`Valid Until: ${quotation.validityDate}`, 14, 62);
+    
+    // Client & Company Info Table
+    autoTable(doc, {
+      startY: 70,
+      head: [['Client Information', 'Company Information']],
+      body: [
+        ['Client Name: ' + quotation.clientName, 'Company: ' + quotation.companyName],
+        ['', 'Contact: ' + quotation.contactInfo]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Description Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Description']],
+      body: [[quotation.description]],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Financial Details Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Item', 'Amount']],
+      body: [
+        ['Total Amount', '$' + quotation.totalAmount.toLocaleString()]
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 },
+      columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } }
+    });
+    
+    // Terms & Conditions
+    if (quotation.terms) {
+      autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY + 10,
+        head: [['Terms & Conditions']],
+        body: [[quotation.terms]],
+        theme: 'grid',
+        headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 9 }
+      });
+    }
+    
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 285);
+    doc.text(`Page ${pageCount}`, 196, 285, { align: 'right' });
+    
+    doc.save(`Quotation_${quotation.quotationNumber}_${quotation.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
   // 6. Invoice CRUD
@@ -404,46 +459,127 @@ Date: ${new Date().toLocaleDateString()}
   };
 
   const downloadInvoicePDF = (invoice: Invoice) => {
-    const content = `
-=========================================
-           INVOICE
-=========================================
-Invoice Number: ${invoice.invoiceNumber}
-Invoice Date: ${invoice.invoiceDate}
------------------------------------------
-CLIENT INFORMATION
-Client Name: ${invoice.clientName}
-Contact: ${invoice.clientContact}
------------------------------------------
-COMPANY INFORMATION
-Company: ${invoice.companyName}
-Contact: ${invoice.companyContact}
------------------------------------------
-DESCRIPTION OF SERVICE/PRODUCT
-${invoice.description}
------------------------------------------
-FINANCIAL DETAILS
-Total Amount: $${invoice.totalAmount.toLocaleString()}
-Tax Details: ${invoice.taxDetails}
------------------------------------------
-PAYMENT INFORMATION
-Due Date: ${invoice.dueDate}
-Payment Status: ${invoice.paymentStatus}
-=========================================
-Generated via AttendX Platform
-Date: ${new Date().toLocaleDateString()}
-=========================================
-    `.trim();
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(220, 38, 38);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('ClientLeo Platform', 105, 30, { align: 'center' });
+    
+    // Invoice Details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Invoice #: ${invoice.invoiceNumber}`, 14, 50);
+    doc.text(`Invoice Date: ${invoice.invoiceDate}`, 14, 56);
+    doc.text(`Due Date: ${invoice.dueDate}`, 14, 62);
+    
+    // Payment Status Badge
+    const statusColor = invoice.paymentStatus === 'Paid' ? [16, 185, 129] : 
+                       invoice.paymentStatus === 'Partial' ? [245, 158, 11] : [239, 68, 68];
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.roundedRect(160, 48, 40, 8, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.paymentStatus, 180, 53, { align: 'center' });
+    
+    // Client & Company Info Table
+    doc.setTextColor(0, 0, 0);
+    autoTable(doc, {
+      startY: 70,
+      head: [['Client Information', 'Company Information']],
+      body: [
+        ['Client Name: ' + invoice.clientName, 'Company: ' + invoice.companyName],
+        ['Contact: ' + invoice.clientContact, 'Contact: ' + invoice.companyContact]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Description Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Description of Service/Product']],
+      body: [[invoice.description]],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Financial Details Table
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Item', 'Amount']],
+      body: [
+        ['Subtotal', '$' + invoice.totalAmount.toLocaleString()],
+        ['Tax Details', invoice.taxDetails],
+        ['Total Amount Due', '$' + invoice.totalAmount.toLocaleString()]
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 },
+      columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+      foot: [['TOTAL DUE', '$' + invoice.totalAmount.toLocaleString()]],
+      footStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 12 }
+    });
+    
+    // Payment Information
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [['Payment Information']],
+      body: [
+        ['Due Date: ' + invoice.dueDate],
+        ['Payment Status: ' + invoice.paymentStatus]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 285);
+    doc.text(`Page ${pageCount}`, 196, 285, { align: 'right' });
+    
+    doc.save(`Invoice_${invoice.invoiceNumber}_${invoice.clientName.replace(/\s+/g, '_')}.pdf`);
+  };
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Invoice_${invoice.invoiceNumber}_${invoice.clientName.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // 7. Business Proposal CRUD
+  const handleSaveProposal = async () => {
+    if (!proposalForm.clientName || !selectedOrgId) return;
+    try {
+      if (editingId) {
+        await db.collection('proposals').doc(editingId).update(proposalForm);
+      } else {
+        await db.collection('proposals').add({
+          ...proposalForm,
+          orgId: selectedOrgId,
+          proposalNumber: `PROP-${Date.now()}`,
+          createdAt: new Date().toISOString()
+        });
+      }
+      setShowProposalModal(false);
+      setEditingId(null);
+      setProposalForm({ proposalNumber: '', clientName: '', introduction: '', problemStatement: '', proposedSolution: '', scopeOfWork: '', imageUrls: [], pricing: 0, timeline: '' });
+    } catch (error) {
+      console.error('Error saving proposal:', error);
+    }
+  };
+
+  const deleteProposal = async (id: string) => {
+    try {
+      await db.collection('proposals').doc(id).delete();
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+    }
   };
 
   // --- TAB UI ---
@@ -549,6 +685,7 @@ Date: ${new Date().toLocaleDateString()}
           <div className="flex border-b border-slate-100 px-6 overflow-x-auto scrollbar-hide bg-slate-50/30">
             <TabButton id="overview" label="Performance" icon={BarChart} />
             <TabButton id="profile" label="Organization Profile" icon={User} />
+            <TabButton id="proposals" label="Business Proposals" icon={Briefcase} />
             <TabButton id="quotations" label="Quotations" icon={FileText} />
             <TabButton id="invoices" label="Invoices" icon={Receipt} />
             <TabButton id="activity" label="Security Audits" icon={History} />
@@ -580,7 +717,7 @@ Date: ${new Date().toLocaleDateString()}
                 <div className="p-10 bg-slate-900 rounded-[40px] text-white flex flex-col md:flex-row items-center justify-between gap-8">
                    <div>
                      <h3 className="text-2xl font-black mb-2">Organization Overview</h3>
-                     <p className="text-slate-400 max-w-md font-medium">Manage multiple business units under a single administrative umbrella with AttendX Enterprise Control.</p>
+                     <p className="text-slate-400 max-w-md font-medium">Manage multiple business units under a single administrative umbrella with ClientLeo Enterprise Control.</p>
                    </div>
                    <button onClick={() => setActiveTab('profile')} className="px-10 py-4 bg-white text-slate-900 rounded-[20px] font-black hover:bg-slate-100 transition-all">
                       Manage Detailed Profile
@@ -749,6 +886,61 @@ Date: ${new Date().toLocaleDateString()}
                       </div>
                     )}
                  </div>
+              </div>
+            )}
+
+            {activeTab === 'proposals' && (
+              <div className="animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-10">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Business Proposals</h3>
+                  <button 
+                    onClick={() => {
+                      setProposalForm({ proposalNumber: '', clientName: '', introduction: '', problemStatement: '', proposedSolution: '', scopeOfWork: '', imageUrls: [], pricing: 0, timeline: '' });
+                      setEditingId(null);
+                      setShowProposalModal(true);
+                    }}
+                    className="px-8 py-4 bg-indigo-600 text-white rounded-[20px] font-black text-sm hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" /> New Proposal
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {currentProposals.map(p => (
+                    <div key={p.id} className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm hover:shadow-xl transition-all">
+                      <div className="flex items-start justify-between mb-6">
+                        <div>
+                          <div className="text-xs font-bold text-slate-400 mb-1">{p.proposalNumber}</div>
+                          <h4 className="text-lg font-black text-slate-800">{p.clientName}</h4>
+                        </div>
+                        <span className="text-indigo-600 font-black text-xl">${p.pricing.toLocaleString()}</span>
+                      </div>
+                      <div className="space-y-3 mb-6">
+                        <div className="text-xs font-bold text-slate-400 uppercase">Introduction</div>
+                        <p className="text-sm text-slate-600 line-clamp-2">{p.introduction}</p>
+                        <div className="text-xs font-bold text-slate-400 uppercase mt-3">Timeline</div>
+                        <p className="text-sm text-slate-600">{p.timeline}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            setEditingId(p.id);
+                            setProposalForm({ proposalNumber: p.proposalNumber, clientName: p.clientName, introduction: p.introduction, problemStatement: p.problemStatement, proposedSolution: p.proposedSolution, scopeOfWork: p.scopeOfWork, imageUrls: p.imageUrls, pricing: p.pricing, timeline: p.timeline });
+                            setShowProposalModal(true);
+                          }}
+                          className="flex-1 py-3 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteProposal(p.id)}
+                          className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1264,6 +1456,70 @@ Date: ${new Date().toLocaleDateString()}
               <div className="col-span-2 flex gap-4 pt-8">
                 <button onClick={() => setShowInvoiceModal(false)} className="flex-1 py-5 bg-slate-50 text-slate-500 rounded-3xl font-black">Cancel</button>
                 <button onClick={handleSaveInvoice} className="flex-1 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl hover:bg-indigo-700">Save Invoice</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Business Proposal CRUD Modal */}
+      {showProposalModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-3xl rounded-[48px] shadow-2xl p-10 animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{editingId ? 'Edit Proposal' : 'New Business Proposal'}</h3>
+              <button onClick={() => setShowProposalModal(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600"><X /></button>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Client Name</label>
+                  <input type="text" value={proposalForm.clientName} onChange={e => setProposalForm({...proposalForm, clientName: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing / Budget</label>
+                  <input type="number" value={proposalForm.pricing} onChange={e => setProposalForm({...proposalForm, pricing: Number(e.target.value)})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Introduction</label>
+                <textarea value={proposalForm.introduction} onChange={e => setProposalForm({...proposalForm, introduction: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} placeholder="Brief introduction about the proposal" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Problem Statement</label>
+                <textarea value={proposalForm.problemStatement} onChange={e => setProposalForm({...proposalForm, problemStatement: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} placeholder="Describe the problem or challenge" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proposed Solution</label>
+                <textarea value={proposalForm.proposedSolution} onChange={e => setProposalForm({...proposalForm, proposedSolution: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} placeholder="Your solution to address the problem" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scope of Work</label>
+                <textarea value={proposalForm.scopeOfWork} onChange={e => setProposalForm({...proposalForm, scopeOfWork: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" rows={3} placeholder="Detailed scope and deliverables" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Image/Video URLs (comma-separated)</label>
+                <input 
+                  type="text" 
+                  value={proposalForm.imageUrls.join(', ')} 
+                  onChange={e => setProposalForm({...proposalForm, imageUrls: e.target.value.split(',').map(url => url.trim()).filter(url => url)})} 
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" 
+                  placeholder="https://example.com/image1.jpg, https://example.com/video.mp4"
+                />
+                <p className="text-xs text-slate-400 mt-1">Enter image or video URLs separated by commas</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Timeline</label>
+                <input type="text" value={proposalForm.timeline} onChange={e => setProposalForm({...proposalForm, timeline: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-indigo-100 font-bold" placeholder="e.g., 6-8 weeks" />
+              </div>
+              <div className="flex gap-4 pt-8">
+                <button onClick={() => setShowProposalModal(false)} className="flex-1 py-5 bg-slate-50 text-slate-500 rounded-3xl font-black">Cancel</button>
+                <button 
+                  onClick={handleSaveProposal}
+                  className="flex-1 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl hover:bg-indigo-700"
+                >
+                  Save Proposal
+                </button>
               </div>
             </div>
           </div>
