@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
+import ClientLoginPage from './pages/ClientLoginPage';
 import WhatsAppInfoPage from './pages/WhatsAppInfoPage';
 import LeadManagement from './pages/LeadManagement';
 import { User, UserRole } from './types';
@@ -64,6 +65,10 @@ const App: React.FC = () => {
           />
           <Route 
             path="/client-portal" 
+            element={<ClientLoginPage />} 
+          />
+          <Route 
+            path="/client-dashboard" 
             element={<ClientDashboard onLogout={handleLogout} />} 
           />
           <Route 

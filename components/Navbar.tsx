@@ -29,9 +29,11 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'landing', userName, onLogout
       <div className="max-w-7xl mx-auto h-full px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-indigo-600 p-1.5 rounded-xl group-hover:rotate-12 transition-transform shadow-lg shadow-indigo-200/50">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
+            <img 
+              src="/clientleo.png" 
+              alt="ClientLeo Logo" 
+              className="w-10 h-10 group-hover:scale-110 transition-transform shadow-lg rounded-lg"
+            />
             <span className="text-2xl font-black tracking-tighter text-slate-900">ClientLeo</span>
           </Link>
         </div>

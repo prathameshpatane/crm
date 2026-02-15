@@ -398,7 +398,7 @@ const ClientDashboard: React.FC = () => {
       startY: (doc as any).lastAutoTable.finalY + 10,
       head: [['Item', 'Amount']],
       body: [
-        ['Total Amount', '$' + quotation.totalAmount.toLocaleString()]
+        ['Total Amount', 'Rs ' + quotation.totalAmount.toLocaleString()]
       ],
       theme: 'striped',
       headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
@@ -517,15 +517,15 @@ const ClientDashboard: React.FC = () => {
       startY: (doc as any).lastAutoTable.finalY + 10,
       head: [['Item', 'Amount']],
       body: [
-        ['Subtotal', '$' + invoice.totalAmount.toLocaleString()],
+        ['Subtotal', 'Rs ' + invoice.totalAmount.toLocaleString()],
         ['Tax Details', invoice.taxDetails],
-        ['Total Amount Due', '$' + invoice.totalAmount.toLocaleString()]
+        ['Total Amount Due', 'Rs ' + invoice.totalAmount.toLocaleString()]
       ],
       theme: 'striped',
       headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold' },
       styles: { fontSize: 10 },
       columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
-      foot: [['TOTAL DUE', '$' + invoice.totalAmount.toLocaleString()]],
+      foot: [['TOTAL DUE', 'Rs ' + invoice.totalAmount.toLocaleString()]],
       footStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 12 }
     });
     
@@ -580,6 +580,86 @@ const ClientDashboard: React.FC = () => {
     } catch (error) {
       console.error('Error deleting proposal:', error);
     }
+  };
+
+  const downloadProposalPDF = (proposal: BusinessProposal) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BUSINESS PROPOSAL', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('AttendX Platform', 105, 30, { align: 'center' });
+    
+    // Proposal Details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Proposal #: ${proposal.proposalNumber}`, 14, 50);
+    doc.text(`Client: ${proposal.clientName}`, 14, 56);
+    doc.text(`Timeline: ${proposal.timeline}`, 14, 62);
+    
+    // Introduction
+    autoTable(doc, {
+      startY: 70,
+      head: [['Introduction']],
+      body: [[proposal.introduction]],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Problem Statement
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      head: [['Problem Statement']],
+      body: [[proposal.problemStatement]],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Proposed Solution
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      head: [['Proposed Solution']],
+      body: [[proposal.proposedSolution]],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Scope of Work
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      head: [['Scope of Work']],
+      body: [[proposal.scopeOfWork]],
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10 }
+    });
+    
+    // Pricing
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      head: [['Pricing', 'Timeline']],
+      body: [['Rs ' + proposal.pricing.toLocaleString(), proposal.timeline]],
+      theme: 'striped',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10, fontStyle: 'bold' }
+    });
+    
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 285);
+    doc.text(`Page ${pageCount}`, 196, 285, { align: 'right' });
+    
+    doc.save(`Proposal_${proposal.proposalNumber}_${proposal.clientName.replace(/\s+/g, '_')}.pdf`);
   };
 
   // --- TAB UI ---
@@ -912,7 +992,7 @@ const ClientDashboard: React.FC = () => {
                           <div className="text-xs font-bold text-slate-400 mb-1">{p.proposalNumber}</div>
                           <h4 className="text-lg font-black text-slate-800">{p.clientName}</h4>
                         </div>
-                        <span className="text-indigo-600 font-black text-xl">${p.pricing.toLocaleString()}</span>
+                        <span className="text-indigo-600 font-black text-xl">Rs {p.pricing.toLocaleString()}</span>
                       </div>
                       <div className="space-y-3 mb-6">
                         <div className="text-xs font-bold text-slate-400 uppercase">Introduction</div>
@@ -921,6 +1001,12 @@ const ClientDashboard: React.FC = () => {
                         <p className="text-sm text-slate-600">{p.timeline}</p>
                       </div>
                       <div className="flex gap-2">
+                        <button 
+                          onClick={() => downloadProposalPDF(p)}
+                          className="flex-1 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Download
+                        </button>
                         <button 
                           onClick={() => {
                             setEditingId(p.id);
@@ -967,7 +1053,7 @@ const ClientDashboard: React.FC = () => {
                           <div className="text-xs font-bold text-slate-400 mb-1">{q.quotationNumber}</div>
                           <h4 className="text-lg font-black text-slate-800">{q.clientName}</h4>
                         </div>
-                        <span className="text-emerald-600 font-black text-xl">${q.totalAmount}</span>
+                        <span className="text-emerald-600 font-black text-xl">Rs {q.totalAmount}</span>
                       </div>
                       <p className="text-sm text-slate-600 mb-4">{q.description}</p>
                       <div className="text-xs text-slate-400 mb-6">Valid until: {q.validityDate}</div>
@@ -1032,7 +1118,7 @@ const ClientDashboard: React.FC = () => {
                       </div>
                       <p className="text-sm text-slate-600 mb-4">{inv.description}</p>
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-2xl font-black text-slate-900">${inv.totalAmount}</span>
+                        <span className="text-2xl font-black text-slate-900">Rs {inv.totalAmount}</span>
                         <span className="text-xs text-slate-400">Due: {inv.dueDate}</span>
                       </div>
                       <div className="flex gap-2">

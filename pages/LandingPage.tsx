@@ -325,9 +325,11 @@ const LandingPage: React.FC = () => {
             {/* Branding Column */}
             <div className="space-y-8">
               <div className="flex items-center gap-3">
-                <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
+                <img 
+                  src="/clientleo.png" 
+                  alt="ClientLeo Logo" 
+                  className="w-10 h-10 shadow-lg rounded-lg"
+                />
                 <span className="text-2xl font-black tracking-tighter text-white">ClientLeo</span>
               </div>
               <p className="text-slate-400 font-medium leading-relaxed">

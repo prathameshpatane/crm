@@ -94,7 +94,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
   }, []);
 
   // Salary Constants (Mock Data)
-  const MONTHLY_SALARY = 4400; // Base salary
+  const MONTHLY_SALARY = 44000; // Base salary
   const TOTAL_WORKING_DAYS = 22; // Expected days in month
 
   // Derived Salary Metrics
@@ -272,8 +272,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
       startY: (doc as any).lastAutoTable.finalY + 10,
       head: [['Salary Structure', 'Amount']],
       body: [
-        ['Base Monthly Salary', `$${salaryData.monthly.toFixed(2)}`],
-        ['Daily Rate', `$${salaryData.daily.toFixed(2)}`]
+        ['Base Monthly Salary', `Rs ${salaryData.monthly.toFixed(2)}`],
+        ['Daily Rate', `Rs ${salaryData.daily.toFixed(2)}`]
       ],
       theme: 'striped',
       headStyles: { 
@@ -318,8 +318,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
       head: [['Earnings Calculation']],
       body: [
         ['Formula: (Base Salary / Total Working Days) × Days Worked'],
-        [`($${salaryData.monthly.toFixed(2)} / ${TOTAL_WORKING_DAYS}) × ${salaryData.daysWorked}`],
-        [`= $${salaryData.daily.toFixed(2)} × ${salaryData.daysWorked}`]
+        [`(Rs ${salaryData.monthly.toFixed(2)} / ${TOTAL_WORKING_DAYS}) × ${salaryData.daysWorked}`],
+        [`= Rs ${salaryData.daily.toFixed(2)} × ${salaryData.daysWorked}`]
       ],
       theme: 'plain',
       headStyles: { 
@@ -335,7 +335,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
     // Total Payable (Highlighted)
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['TOTAL PAYABLE', `$${salaryData.payable.toFixed(2)}`]],
+      head: [['TOTAL PAYABLE', `Rs ${salaryData.payable.toFixed(2)}`]],
       theme: 'grid',
       headStyles: { 
         fillColor: [16, 185, 129], 
@@ -408,7 +408,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
               </div>
               <div className="bg-emerald-600 p-6 rounded-3xl shadow-lg shadow-emerald-100 text-white cursor-pointer hover:bg-emerald-700 transition-colors" onClick={() => setActiveMenu('salary')}>
                 <div className="text-emerald-100 text-[10px] font-black uppercase tracking-widest mb-1">Accrued Salary</div>
-                <div className="text-2xl font-black">${salaryData.payable.toLocaleString()}</div>
+                <div className="text-2xl font-black">Rs {salaryData.payable.toLocaleString()}</div>
               </div>
             </div>
 
@@ -521,11 +521,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
                     <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
                       <div>
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gross Monthly Salary</div>
-                        <div className="text-xl font-black text-slate-900">${salaryData.monthly.toLocaleString()}</div>
+                        <div className="text-xl font-black text-slate-900">Rs {salaryData.monthly.toLocaleString()}</div>
                       </div>
                       <div className="text-right">
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Per Day Rate</div>
-                        <div className="text-xl font-black text-indigo-600">${salaryData.daily.toFixed(2)}</div>
+                        <div className="text-xl font-black text-indigo-600">Rs {salaryData.daily.toFixed(2)}</div>
                       </div>
                     </div>
 
@@ -545,11 +545,11 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
                     <div className="grid grid-cols-2 gap-4 mt-8">
                       <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
                         <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Payable Now</div>
-                        <div className="text-3xl font-black text-emerald-700">${salaryData.payable.toLocaleString()}</div>
+                        <div className="text-3xl font-black text-emerald-700">Rs {salaryData.payable.toLocaleString()}</div>
                       </div>
                       <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
                         <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Pending Accrual</div>
-                        <div className="text-3xl font-black text-indigo-700">${(salaryData.monthly - salaryData.payable).toLocaleString()}</div>
+                        <div className="text-3xl font-black text-indigo-700">Rs {(salaryData.monthly - salaryData.payable).toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
                   </p>
                   <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Estimated Bonus</div>
-                    <div className="text-2xl font-black text-emerald-400">+$250.00</div>
+                    <div className="text-2xl font-black text-emerald-400">+Rs 250.00</div>
                   </div>
                 </div>
               </div>
@@ -718,7 +718,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ user, onLogout })
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-600/20 to-transparent"></div>
                 <h3 className="text-xl font-bold mb-2 relative z-10">Earnings This Month</h3>
                 <div className="flex items-center gap-4 mb-6 relative z-10">
-                  <div className="text-4xl font-black text-emerald-400">${salaryData.payable.toLocaleString()}</div>
+                  <div className="text-4xl font-black text-emerald-400">Rs {salaryData.payable.toLocaleString()}</div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Net<br/>Accrued</div>
                 </div>
                 <button 
