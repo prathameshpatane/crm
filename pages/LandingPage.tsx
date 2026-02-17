@@ -120,6 +120,48 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Email Bulk Messaging Section */}
+      <section className="py-24 bg-gradient-to-br from-blue-900 to-indigo-900 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full"></div>
+        <div className="container mx-auto px-4 md:px-8 max-w-7xl relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 order-1 lg:order-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
+                <Mail className="w-4 h-4" />
+                Email Automation
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
+                Email Bulk Messaging Plugin
+              </h2>
+              <p className="text-lg text-slate-400 mb-10 leading-relaxed font-medium">
+                Send professional bulk emails to your entire workforce with our powerful Chrome extension. Perfect for company-wide announcements, policy updates, and mass communications.
+              </p>
+              <Link 
+                to="/email-automation" 
+                className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/40 group"
+              >
+                Learn How to Setup <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            
+            <div className="flex-1 order-2 lg:order-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm">
+                  <Mail className="w-10 h-10 text-blue-400 mb-4" />
+                  <h4 className="text-white font-bold mb-2">Mass Email</h4>
+                  <p className="text-slate-400 text-sm">Send emails to hundreds of employees simultaneously.</p>
+                </div>
+                <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-sm translate-y-8">
+                  <CheckCircle className="w-10 h-10 text-sky-400 mb-4" />
+                  <h4 className="text-white font-bold mb-2">Professional Templates</h4>
+                  <p className="text-slate-400 text-sm">Use pre-built templates for quick deployment.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Lead Management Section */}
       <section className="py-24 bg-gradient-to-br from-indigo-50 to-sky-50 overflow-hidden relative">
         <div className="container mx-auto px-4 md:px-8 max-w-7xl">

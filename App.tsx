@@ -8,6 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import ClientLoginPage from './pages/ClientLoginPage';
 import WhatsAppInfoPage from './pages/WhatsAppInfoPage';
+import EmailSetupPage from './pages/EmailSetupPage';
 import LeadManagement from './pages/LeadManagement';
 import { User, UserRole } from './types';
 import { auth } from './lib/firebase';
@@ -74,6 +75,10 @@ const App: React.FC = () => {
           <Route 
             path="/whatsapp-automation" 
             element={<WhatsAppInfoPage onLogout={handleLogout} />} 
+          />
+          <Route 
+            path="/email-automation" 
+            element={<EmailSetupPage />} 
           />
           <Route 
             path="/lead-management" 
